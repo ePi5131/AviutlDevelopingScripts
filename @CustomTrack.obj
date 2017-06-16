@@ -1,0 +1,128 @@
+-------------------------------------------------------------------
+@Audio
+-------------------------------------------------------------------
+--track0:Volume%,0,500,100
+--track1:Number,1,100,1,1
+--track2:Smooth,1,100,1,1
+--track3:Saving,1,100,1,1
+--check0:Info,0
+--dialog:info:fr/col,local frcol=0x5e607d;info:to/col,local tocol=0xff9fa7;info:+tx/col,local txPlscol=0x888888;
+
+local w,h=obj.screen_w/2,obj.screen_h/4
+local min = math.min(w,h)
+local vol,num,smt,sav = obj.track0/100,obj.track1,obj.track2,obj.track3
+local optmp = {}
+local f = obj.frame%smt+1
+local a = {}
+local i,j,r,dr,x0,y0,x1,y1,dw,s,v,dh,ds,dv,col,txcol,txh,txs,txv,y
+
+if(obj.frame==0) then CT.audio[sav],CTopt[sav]=nil,nil end
+CT = CT or {}
+CTopt = CTopt or {}
+r,dr = {},{}
+
+-- if(CT) then CT = CT else CT = {} end
+CT = CT or {}
+CT[sav] = {}
+CTopt = CTopt or {}
+CTopt[sav] = CTopt[sav] or {}
+
+-- if(CTopt[sav]) then optmp = CTopt[sav] else optmp = {} end
+
+optmp = CTopt[sav] or {}
+optmp[f] = {}
+
+obj.getaudio(a,"audiobuffer","spectrum",num)
+
+for i=1,num do
+	optmp[f][i] = a[i]
+end
+if(smt~=1) then
+	for i=1,smt do
+		for j=1,num do
+			r[j] = r[j] or 0
+			if(type(optmp[i])=="table")then r[j]=r[j]+((i~=f and optmp[i][j]) or 0) else r[j]=r[j] end
+			-- r[j]=r[j]+((i~=f and optmp[i][j]) or 0)
+		end
+	end
+else
+	for i=1,num do
+		r[i]=optmp[1][i]
+	end
+end
+
+for i=1,num do dr[i] = r[i]/smt*vol end
+for i=1,num do
+	CT[sav][i] = dr[i]
+end
+CTopt[sav]=optmp
+----------------------------------------------------
+
+if(obj.check0) then
+	obj.setfont("Impact",min/8)
+
+	obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+	obj.load("figure","四角形",0x555555,1)
+	x0,x1=w/-2,w/2
+	y0,y1=h/-2,h/2
+	obj.drawpoly(x0,y0,0, x1,y0,0, x1,y1,0, x0,y1,0)
+
+	
+	dw=w/num
+	h,s,v=HSV(frcol)
+	dh,ds,dv=HSV(tocol)
+	dh,ds,dv=dh-h,ds-s,dv-v
+	txh,txs,txv=HSV(txPlscol)
+	txh,txs,txv=txh/3,txs/3,txv/5-10
+	for i=1,num do
+		j=i-1
+
+		col = HSV(h+dh*(j), s+ds*(j), v+dv*(j))
+		txcol=HSV(h+dh*(j)-txh, s+ds*(j)-txs, v+dv*(j)-txv)
+		x0,x1,y=dw*j-(num/2*dw), dw*i, dr[i]/2
+
+		obj.setoption("dst","tmp")
+		obj.load("figure","四角形",0xffffff,1)
+		obj.drawpoly(x0,y,0, x1,y,0, x1,h/2,0, x0,h/2,0)
+
+		obj.setoption("dst","tmp")
+		obj.setfont("Impact",min/8,0,txcol)
+		obj.load("d"..i..":\nvol:"..math.floor(dr[i])..";")
+		obj.draw(x0,0)
+	end
+	obj.load("tempbuffer")
+	obj.draw()
+end
+if(obj.totalframe-obj.frame==0) then CT.audio[sav],CTopt[sav]=nil,nil end
+
+-------------------------------------------------------------------
+@Loop
+-------------------------------------------------------------------
+--track0:Frame,2,1000,2,1
+--track2:Affect,0,100,100
+--track3:Saving,1,100,1,1
+--check0:Info,0
+local w,h=obj.screen_w/2,obj.screen_h/4
+local min = math.min(w,h)
+local frm,af,sav = obj.track0,obj.track2/100,obj.track3
+local uf=1-af
+local f,tf=obj.frame,obj.totalframe
+local optmp = {}
+
+local a = {}
+local i,j,r,dr,x0,y0,x1,y1,dw,s,v,dh,ds,dv,col,txcol,txh,txs,txv,y
+CT = CT or {}
+CTopt = CTopt or {}
+CT[sav] = {}
+CTopt[sav] = CTopt[sav] or {}
+
+-- if(CT) then CT = CT else CT = {} end
+
+optmp = (f/tf)*uf +(f)%frm/frm*af
+
+
+CT[sav] = optmp
+
+-------------------------------------------------------------------
+@Delay
+-------------------------------------------------------------------

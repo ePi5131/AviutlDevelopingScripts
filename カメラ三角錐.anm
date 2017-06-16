@@ -1,0 +1,28 @@
+local sx=ctmp[1]
+local sy=ctmp[2]
+local sz=ctmp[3]
+local cx=ctmp2[1]
+local cy=ctmp2[2]
+local cz=ctmp2[3]
+local cw=ctmp2[7]/2
+local ch=ctmp2[8]/2
+local dif=5
+local i=0
+
+for i=1,2 do
+obj.drawpoly(
+sx-dif,sy-dif,sz-dif,
+sx,sy,sz,
+cx+dif+cw*(-1*((i)%2)),cy+dif+ch,cz+dif,
+cx+cw*(-1*((i)%2)),cy+ch,cz
+)
+end
+
+for i=1,2 do
+obj.drawpoly(
+sx-dif,sy-dif,sz-dif,
+sx,sy,sz,
+cx+dif+cw*(-1*((i)%2)),cy+dif+ch*-1,cz+dif,
+cx+cw*(-1*((i)%2)),cy+ch*-1,cz
+)
+end

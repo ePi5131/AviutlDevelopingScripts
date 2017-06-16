@@ -1,0 +1,8 @@
+--param:0
+
+
+local p,n=obj.getpoint("param")/100,obj.getpoint("num")
+local i,af = math.modf(obj.getpoint("index"))
+local gp1,gp2=obj.getpoint(i),obj.getpoint(i+1)
+
+return gp1 +(gp2-gp1)*(af-p)

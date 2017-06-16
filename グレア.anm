@@ -1,0 +1,97 @@
+--[[
+SKYEFFECT-A
+Depelop by Aodaruma
+Twitter:@Aodaruma_
+
+scriptの二次配布、またはコピー等はご遠慮ください。
+]]
+
+@RamdomText
+--track0:ずれ,-50,50,0
+--dialog:text内容,local b="";Font,local f="";Size,local siz="50";装飾,dec="0";Color/col,local c=0xffffff;影Color/col,local c2=0x000000;文章中のspaseを除く/chk,local isspace=0
+
+local der = math.floor(obj.track0)
+local s = {}
+local a = ""
+local d = 0
+local isn = {}
+local continue = 0
+
+for i=1,#b do
+        s[i] = string.byte(b,i,i)
+        if (continue > 0)then
+        if (continue == 1)then
+        isn[i] = 2
+        else
+        isn[i] = 0
+        end
+        continue = continue - 1
+        else
+            if (s[i]> 126)then
+                   isn[i] = 0
+                   continue = 2
+            else
+                isn[i] = 1
+                if (s[i] == 32 and isspace == 1) then
+                isn[i] = 0
+                end
+        end
+    end
+end
+
+for j=1,#b do
+    if(isn[j] == 1) then
+    	if(s[j]+der < 32) then
+	        d = 32
+        elseif(s[j]+der > 126)then
+	        d = 126
+        else
+	        d = s[j]+der
+        end
+    elseif(isn[j] == 2) then
+    	if(s[j]+der < 0) then
+	        d = 0
+        elseif(s[j]+der > 255)then
+	        d = 255
+        else
+	        d = s[j]+der
+        end
+    else
+        d = s[j]
+    end
+        a = a .. string.char(d)
+--        a = a .. (d)
+end
+obj.setfont(f,siz,dec,c,c2)
+obj.load("text",a)
+
+------------------------------------------------------------------
+@Slicer
+--track0:度合,0,1000,0.0
+--track1:角度,-720,720,0.0
+--track2:中心X,-1000,1000,0
+--track3:中心Y,-1000,1000,0
+bbx = obj.track2
+bby = obj.track3
+r = obj.track1
+frame=obj.track0
+ax = (math.cos(r*math.pi/180))*frame
+ay = (math.sin(r*math.pi/180))*frame
+ayy =(math.sin((r+90)*math.pi/180))*0.5
+if (obj.track0 > 0.0) then
+obj.copybuffer("tmp","obj")
+obj.load("tempbuffer")
+obj.effect("斜めクリッピング","中心X",bbx,"中心Y",bby,"角度",r,"ぼかし",0)
+obj.draw(ax,ay+ayy,0)
+obj.load("tempbuffer")
+obj.effect("斜めクリッピング","中心X",bbx,"中心Y",bby,"角度",180+r,"ぼかし",0)
+obj.draw(-ax,-ay-ayy,0)
+end
+
+------------------------------------
+@objective情報確認
+--track0:size,0,2000,0
+--dialog:Font,local f="";Color/col,local c="0xffffff";座標情報/chk,local i_zahyo=0;回転情報/chk,local i_kaiten=0;拡大率情報/chk,local i_kakudai=0;縦横比情報/chk,local i_zyuou=0;出力中は表示しない/chk,local saving=0;単位を表示しない/chk,local tanni=0;
+
+obj.setfont(f, track0, 0, c)
+if(saving==0)

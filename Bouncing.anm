@@ -1,0 +1,53 @@
+--track0:分割数,2,500,30,1
+--track1:角度,-720,720,0
+--track2:進行度%,-100,100,0
+--track3:反映速度,0,100,0.05,0.01
+--check0:速度対応化,0
+
+local divi=obj.track0
+local ang=obj.track1
+local af=obj.track2/100
+local degr=50
+local delay=obj.track3/10
+local resize
+
+-----------------------------
+local w,h, x,y,z, lx,ly= obj.w,obj.h, obj.ox,obj.oy,obj.oz, obj.getvalue("x",delay),obj.getvalue("y",delay)
+local dxl, dxr, dyu, dyd=-w/2+x,w/2+x,-h/2+y,h/2+y
+local dw, dh=w/divi, h/divi
+local diag=math.sqrt(lx^2+ly^2)-math.sqrt(x^2+y^2)
+local dx,dy=lx-x, ly-y
+local poly={}
+local i,j
+for i=0,divi do
+  if(poly[i]==nil) then poly[i]={} end
+  for j=0,divi do
+    poly[i][j]={dxl+dw*i, dyu+dh*j, dx*i, dy*j}
+  end
+end
+
+if(obj.check0) then
+	ang=dx/math.sqrt(dx+dy)
+	resize=diag*af+1
+else
+	resize=af
+end
+
+
+for i=1,divi do
+  for j=1,divi do
+    obj.ox=(poly[i-1][j-1][1]+poly[i+0][j-1][1]+poly[i+0][j+0][1]+poly[i-1][j+0][1])/4
+    obj.oy=(poly[i-1][j-1][2]+poly[i+0][j-1][2]+poly[i+0][j+0][2]+poly[i-1][j+0][2])/4*resize
+    obj.drawpoly(
+        -dw/2,-dh/2*resize,0,
+         dw/2,-dh/2*resize,0,
+         dw/2, dh/2*resize,0,
+        -dw/2, dh/2*resize,0,
+        poly[i-1][j-1][3], poly[i-1][j-1][4], 
+        poly[i+0][j-1][3], poly[i+0][j-1][4], 
+        poly[i+0][j+0][3], poly[i+0][j+0][4], 
+        poly[i-1][j+0][3], poly[i-1][j+0][4]
+    )
+    end
+end
+tmp=poly

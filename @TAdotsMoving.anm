@@ -1,0 +1,67 @@
+--[[このスクリプトはあくまで個人用です。そのため多少の機能不足はご了承願いますようお願いいたします]]--
+
+--------------------------------------------------
+@TA枠線位置保存
+--------------------------------------------------
+--track0:メモリー,1,100,1,1
+--track1:位置メモリー,1,100,1,1
+--track2:上書きOK,0,1,0,1
+--check0:実行,0
+
+local b,n,m
+
+require("rikky_module")
+if(obj.check0) then
+	b,n,m=rikky_module.bordering()
+	if(sta==nil) then sta={} end
+	if(sta[obj.track0]==nil) then
+		if(sta[obj.track0==nil) then sta[obj.track0]={} end
+		table.insert(sta[obj.track0], obj.track1, {b=b, n=n, m=m})
+	else
+		if(obj.track2==0) then
+			obj.setfont("メイリオ",200)
+			obj.load("この位置メモリーにはすでに設定されている情報があります。\n上書きするには、『上書きOK』を1にセットしてください。")
+		else
+			table.insert(sta[obj.track0], obj.track1, {b=b, n=n, m=m})
+		end
+	end
+end
+
+--------------------------------------------------
+@TA枠線移動適応
+--------------------------------------------------
+--track0:変換度％,0,100,0,0.01
+--track1:メモリー,1,100,1,1
+--track2:個数,0,10000,500,1
+--track3:size,1,2000,10,1
+--dialog:figure/fig,local fig="円";color/col,local col=0xe74c3c;line,local line=1000;
+
+local af=obj.track0
+local uf
+local m=obj.track1
+local num=obj.track2
+local size=obj.track3
+local i,j,k
+local tmp, aftmp={}, {}
+
+if(af<1) then uf=1-af else uf=0 end
+
+--[[
+変換度と位置メモリーが対応するようにしたい。(already)
+ドットの数との調整が必要だと思うので、「間引き」より「個数」の方がいいかもしれないが技量不足。。。
+]]--
+
+for i=1,#sta do -- AF 
+	if(math.abs(af-i)*(-1)+1<0) then aftmp[i]=0 else aftmp[i]=math.abs(af-i)*-1+1 end
+end
+
+
+for i=1,m do --この辺はまだいじってないです。
+	for j=1,n[i]-1,(math.floor(n/num)) do
+		-- x coordinate inserted oddNumber, y coordinate inserted evenNumber
+		x=j*2-1
+		y=x+1
+		obj.load("figure",fig,col,size,line)
+	obj.draw(tmp[i][x],tmp[i][y])
+	end
+end

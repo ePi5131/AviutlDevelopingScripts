@@ -1,0 +1,164 @@
+--[[
+
+]]--
+@ほんたい
+--track0:分割数,5,200,10,1
+--track1:ﾌﾞﾗｰ範囲,0,100,10
+--track2:基準距離,0,5000,1024,1
+--track3:範囲距離,0,5000,512,1
+--check0:ﾚﾝｽﾞﾌﾞﾗｰ,0
+--dialog:単色化/chk,local isMomo=1;単色化色/col,local monocol=0x000000;境界調整,local boder=10;
+
+local d,rang,refDist,ranDist,isLens=obj.track0,obj.track1,obj.track2,obj.track3,obj.check0
+
+-------------------------------- 定義・Zbuffer取得等
+require("rikky_module")
+require("T_Color_Module")
+local w,h
+local nm="DF"
+local dsv=rang/d
+local i,j,k,col,a,v,r,g,b
+local lum=4096/d
+local userdata,dw,dh
+local dt={h=0,s=0,v=0}
+local read,write,clear,mash=
+	function(id)
+		rikky_module.image("r",nm..":"..id)
+	end,
+	function(id)
+		rikky_module.image("w+",nm..":"..id)
+	end,
+	function(id)
+		rikky_module.image("c",nm..":"..id)
+	end,
+	function(from,to)
+		rikky_module.image("m+",nm..":"..to,nm..":"..from,0,0)
+	end
+image={read=read,write=write,clear=clear,mash=mash}
+local ave=
+	function(n,min,max)
+		local disv=(min+max)/2
+		if(n>=min) and (n<=max) then
+			if(n<disv) then
+				return min
+			elseif(n>=disv) then
+				return max
+			else
+				return false
+			end
+		else
+			return false
+		end
+	end
+
+--------------------------------- 本体
+
+obj.load("framebuffer")
+write("framebuffer")
+
+obj.load("figure", "背景")
+obj.putpixeldata(require"auls_zbuffer".dist(
+	refDist-ranDist,	-- Distance Min
+	refDist+ranDist,	-- Distance Max
+	0xffffff,		-- Nearest Color
+	0x000000,		-- Farthest Color
+	0xff0000,		-- Undrawed Color
+	obj.getinfo"image_max",	
+	obj.getpixeldata()
+))
+--obj.draw()
+w,h=obj.getpixel()
+write("zbuffer")
+
+
+obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+read("zbuffer")
+for i=1,w do
+	for j=1,h do
+		col,a=obj.getpixel(i,j)
+		if(col==0xff0000)then
+			a=0
+		end
+		obj.putpixel(i,j,col,a)
+	end
+end
+
+userdata,dw,dh=obj.getpixeldata()
+T_Color_Module.Posterize(userdata,w,h,d,d,d) --ポスタリゼーションで強引諧調
+obj.putpixeldata(userdata)
+write("zbuffer")
+read("zbuffer")
+
+for i=1,d do
+	read("zbuffer")
+	obj.effect("ルミナンスキー","基準輝度",lum*i,"type",0,"ぼかし",0)
+	obj.effect("ルミナンスキー","基準輝度",lum*(i+1),"type",1,"ぼかし",0)
+	--obj.effect("反転","透明度反転",1)
+	obj.draw()
+	write("buffer-"..i)
+end
+clear("zbuffer")
+
+--read("framebuffer")
+for i=1,d do
+	obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+	read("framebuffer")
+	obj.draw()
+
+	obj.setoption("blend","alpha_sub")--切り抜き
+	read("buffer-"..i)
+	obj.effect("縁取り","サイズ",border)
+	obj.effect("反転","透明度反転",1)
+	obj.draw()
+
+	obj.load("tempbuffer")
+	obj.effect("縁取り","サイズ",10)
+	--obj.effect("境界ぼかし","範囲",2,"透明度の境界をぼかす",1)
+	if(obj.check0) then
+		obj.effect("ぼかし","範囲",(rang/d)*math.abs(d-i-(d/2)),"サイズ固定",1)
+	else
+		obj.effect("レンズブラー","範囲",(rang/d)*math.abs(d-i-(d/2)),"サイズ固定",1)
+	end
+	if(isMono==1) then
+		obj.effect("単色化","強さ",100/d*math.abs(d-i-(d/2)),"color",monocol,"輝度を保持する",0)
+	end
+	obj.draw()
+	
+	write("compBuffer-"..i)
+	--clear("buffer-"..i)
+end
+
+obj.load("figure","背景")
+--obj.draw()
+write("result")
+for i=1,d do
+	mash("compBuffer-"..i,"result")
+	clear("compBuffer-"..i)
+end
+read("result")
+obj.draw()
+
+
+
+
+
+@test
+--obj.draw()
+require("rikky_module")
+local nm="DF"
+local col,a,i,j
+
+rikky_module.image("r+",nm..":".."zbuffer")
+local w,h=obj.getpixel()
+obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+rikky_module.image("r",nm..":".."zbuffer")
+--obj.draw()
+for i=1,w do
+	for j=1,h do
+		col,a=obj.getpixel(i,j)
+		if(col==0xff0000)then a=0 end
+		obj.putpixel(i,j,col,a)
+	end
+end
+--obj.load("tempbuffer")
+--obj.draw()

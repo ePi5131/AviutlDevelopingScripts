@@ -1,0 +1,99 @@
+--[[
+=== ParallelCamera ver1.1===========//// by Aodaruma
+これはカメラを平行移動させることができるスクリプトです。
+探してもなかった上、視線とともに移動させるのものすごく面倒くさかったので作りました。
+ほとんど自分用なので、多少使いにくいところがあるかもしれませんがご了承ください<(_ _)>
+ParallelCameraToObjと一緒に使うとよりいい表現ができるかもしれません。
+
+●座標出力について
+座標出力は配列で格納されています。
+格納順から、カメラX座標、カメラY座標、カメラZ座標、
+カメラX視線先座標、カメラY視線先座標、カメラZ視線先座標、となってます。
+
+●情報表示について
+こちらは少し使い方が難しいと思いますがご了承ください。
+これはただチェックを入れても何も映らないです。
+情報を表示するには、とあるオブジェクトに、一緒に同封されているParallelCameraToObjの「情報表示」を設定するとできます。
+
+現在このくらいしか思いつきませんでしたが、近々更新させていく予定です。
+意見や疑問があればTwitterまで。
+
+更新日時: 17:45 2016/08/07
+Twitter: @Aodaruma_
+
+更新履歴========
+v1.1 - 特定の角度で発生するバグを修正。
+	スクリプト制御、rikky_mouse氏のDLLに対応。
+	そのほかscriptを改良。
+v1.0 - ParallelCamera、正式版作成。
+]]--
+--------------------------------------------------
+@ParallelCamera
+--------------------------------------------------
+--track0:視線和,0,5000,1024
+--track1:カメラ縦転,-1280,1280,0,0.01
+--track2:カメラ横転,-1280,1280,0,0.01
+--check0:カメラ座標出力,0
+--dialog:カメラ情報表示/chk,local info=0;カメラ平行視線先pos,local ctPos={};Parallel(On)/chk,local isParallel=1;Z視線和/chk,local isTz=1;処理を省く/chk,local isOeye=0;
+
+local focasZ=obj.track0
+ctUD=obj.track1/10
+ctLR=obj.track2/10
+local isMemory=obj.check0
+local tmp={}
+local tmp2=""
+local layer=obj.layer
+local cam=obj.getoption("camera_param")
+
+local path=obj.getinfo("script_path")
+local ex,ey,ez=0,0,1
+local eex,eey,eez=-1,0,0
+local bstmp=0
+
+local sin=function(n) return math.sin(math.rad(n)) end
+local cos=function(n) return math.cos(math.rad(n)) end
+local pi=math.pi
+
+if(isParallel==1) then
+	--平行移動
+	if(isTz==0) then
+		cam.tx=cam.x+cam.tx
+		cam.ty=cam.y+cam.ty
+		cam.tz=cam.z+cam.tz+focasZ
+	else
+
+		require("rikky_module")
+		cam.tx=cam.x+cam.tx+sin(ctUD)*cos(ctLR)*focasZ
+		cam.ty=cam.y+cam.ty+cos(ctUD)*focasZ
+		cam.tz=cam.z+cam.tz+sin(ctUD)*sin(ctLR)*focasZ
+		cam.uy=0
+	end
+
+	--座標出力
+	if(isMemory==true) then
+		if(PC==nil) then PC={} end
+		PC["layer"..layer]={cam.x, cam.y, cam.z, cam.tx, cam.ty, cam.tz}
+	end
+
+	--情報表示
+	if(info==1) then
+		if(PCi==nil) then PCi={} end
+		if(isTz==0) then
+			tmp2="notSet"
+		else
+			tmp2=focasZ
+		end
+		if(PCi[layer]==nil) then PCi[layer]={} end
+		PCi[layer]={math.floor(cam.x),math.floor(cam.y),math.floor(cam.z),math.floor(cam.tx),math.floor(cam.ty),math.floor(cam.tz),focasZ}
+	end
+	obj.setoption("camera_param",cam)
+end
+--------------------------------------------------
+@ParallelCam(簡易)
+--------------------------------------------------
+--track0:視線和,0,5000,1024
+local cam=obj.getoption("camera_param")
+cam.tx=cam.x+cam.tx
+cam.ty=cam.y+cam.ty
+cam.tz=cam.z+obj.track0+cam.tz
+obj.setoption("camera_param",cam)

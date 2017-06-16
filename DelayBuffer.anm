@@ -1,0 +1,7 @@
+--track0:‚¸‚ç‚µŠÔŠu,1,50,5,1
+--track1:‚¸‚ç‚µ“x,0,50,5,1
+
+local k,l=obj.track0,obj.track1
+require("rikky_module")
+rikky_module.image("w","DB_tmp"..(obj.frame+l)%k)
+rikky_module.image("r","DB_tmp"..(obj.frame)%k)

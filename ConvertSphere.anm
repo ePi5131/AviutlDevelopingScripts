@@ -1,0 +1,70 @@
+--[[
+
+]]--
+
+--track0:ï™äÑêî,3,500,28,1
+--track1:îºåa,0,5000,200
+--track2:åıåπìx%,0,100,100
+--track3: ≤◊≤ƒº¨∞Ãﬂ,0,200,10
+--check0:í èÌï`âÊ,0
+--dialog:lightR,local lightR=255;lightG,local lightG=255;lightB,local lightB=255;ambientR,local ambientR=255;ambientG,local ambientG=255;ambientB,local ambientB=255;specularR, local specularR=255;specularG, local specularG=255;specularB, local specularB=255;
+
+require("rikky_module")
+local data = {
+	light_num=1,
+	position1={object="shadow"},
+	light1={R=lightR, G=lightG, B=lightB},
+	ambient={R=ambientR, G=ambientG, B=ambientB},
+	emissive={R=emissiveR, G=emissiveG, B=emissiveB},
+	specular={R=specularR, G=specularG, B=specularB, shininess=shininess}
+}
+rikky_module.materialdraw_init(0)
+rikky_module.materialdraw_init(data)
+obj.effect()
+obj.setoption('antialias',0)
+local r = obj.track1*obj.getvalue("zoom")/100
+local w = obj.track0
+local h = obj.track0
+local af= 1
+local uf= 1-af
+local x0,z0,x1,z1,x2,z2,x3,z3,u0,v0,u1,v1,y0,y1
+local dx0,dz0,dx1,dz1,dx2,dz2,dx3,dz3,dy0,dy1
+for y=0,h-1 do
+	y0 = -r*math.cos(math.pi*y    /h)
+	r0 =  r*math.sin(math.pi*y    /h)
+	y1 = -r*math.cos(math.pi*(y+1)/h)
+	r1 =  r*math.sin(math.pi*(y+1)/h)
+	v0 = obj.h*y    /h;
+	v1 = obj.h*(y+1)/h;
+	for x=0,w-1 do
+		x0 =  r0*math.sin(math.pi*2*x    /w) 
+		x1 =  r0*math.sin(math.pi*2*(x+1)/w)
+		x2 =  r1*math.sin(math.pi*2*(x+1)/w)
+		x3 =  r1*math.sin(math.pi*2*x    /w)
+		z0 = -r0*math.cos(math.pi*2*x    /w)
+		z1 = -r0*math.cos(math.pi*2*(x+1)/w)
+		z2 = -r1*math.cos(math.pi*2*(x+1)/w) 
+		z3 = -r1*math.cos(math.pi*2*x    /w)
+		u0 = obj.w*x    /w;
+		u1 = obj.w*(x+1)/w;
+		dx0 =  (x0)*af + u0*uf
+		dx1 =  (x1)*af + u1*uf
+		dx2 =  (x2)*af + u1*uf
+		dx3 =  (x3)*af + u0*uf
+		dz0 =  (z0)*af
+		dz1 =  (z1)*af
+		dz2 =  (z2)*af
+		dz3 =  (z3)*af
+		dy0 =  (y0)*af + v0*uf
+		dy1 =  (y1)*af + v1*uf
+		rikky_module.materialdraw(
+			x0, y0, z0,
+			x1, y0, z1,
+			x2, y1, z2,
+			x3, y1, z3,
+			--u0,v0, u1,v0, u1,v1, u0,v1
+		)
+		--obj.effect("íPêFâª",)
+	end
+end
+obj.setoption("focus_mode","fixed_size")

@@ -1,0 +1,122 @@
+--track0:分割数,1,100,5,1
+--track3:透明度,0,100,0
+--check0:info,1
+--dialog:type[1-5],local tp=1;
+
+if(obj.check0)then
+	obj.setfont("メイリオ",50)
+	obj.load("type:\n\t1: 色相基準\n\t2: 彩度基準\n\t3: 輝度基準\n選択: "..tp.."\n分割数: "..obj.track0.."\n透明度: "..obj.track1)
+else
+	local n,a=obj.track0,1-obj.track1/100
+	local i,j,dw,dh,col,alp,h,s,v,d,d2
+
+	obj.load("framebuffer")
+	dw,dh=obj.getpixel()
+	--w,h=obj.screen_w,obj.screen_h
+	--obj.setoption("dst","tmp",obj.w,obj.h)
+	if(tp==1) then --色相
+		d = 360/n
+		for i=1,dw do
+			for j=1,dh do
+				col,alp = obj.getpixel(i,j)
+				h,s,v = HSV(col)
+				for k=0,n do
+					if(h<=d*k) then
+						h=d*k
+						break
+					end
+				end
+				col=HSV(h,s,v)
+				obj.putpixel(i,j,col,a)
+			end
+		end
+
+	elseif(tp==2) then --彩度
+		d = 100/n
+		for i=1,dw do
+			for j=1,dh do
+				col,alp = obj.getpixel(i,j)
+				h,s,v = HSV(col)
+				for k=0,n do
+					if(s<=d*k) then
+						s=d*k
+						break
+					end
+				end
+				col=HSV(h,s,v)
+				obj.putpixel(i,j,col,a)
+			end
+		end
+
+	elseif(tp==3) then --輝度
+		d = 100/n
+		for i=1,dw do
+			for j=1,dh do
+				col,alp = obj.getpixel(i,j)
+				h,s,v = HSV(col)
+				for k=0,n do
+					if(v<=d*k) then
+						v=d*k
+						break
+					end
+				end
+				col=HSV(h,s,v)
+				obj.putpixel(i,j,col,a)
+			end
+		end
+
+	elseif(tp==4) then --彩度+輝度
+		d = 100/n
+		for i=1,dw do
+			for j=1,dh do
+				col,alp = obj.getpixel(i,j)
+				h,s,v = HSV(col)
+				for k=0,n do
+					if(v<=d*k) then
+						v=d*k
+						break
+					end
+				end
+				for k=0,n do
+					if(s<=d*k) then
+						s=d*k
+						break
+					end
+				end
+				col=HSV(h,s,v)
+				obj.putpixel(i,j,col,a)
+			end
+		end
+
+	elseif(tp==5) then --ALL
+		d = 100/n
+		d2 = 360/n
+		for i=1,dw do
+			for j=1,dh do
+				col,alp = obj.getpixel(i,j)
+				h,s,v = HSV(col)
+				for k=0,n do
+					if(v<=d*k) then
+						v=d*k
+						break
+					end
+				end
+				for k=0,n do
+					if(s<=d*k) then
+						s=d*k
+						break
+					end
+				end
+				for k=0,n do
+					if(h<=d2*k) then
+						h=d2*k
+						break
+					end
+				end
+				col=HSV(h,s,v)
+				obj.putpixel(i,j,col,a)
+			end
+		end
+
+	end
+end

@@ -1,0 +1,39 @@
+--track0:å¬êî,1,5000,20,1
+--track1:±›∂∞,4,16,4,1
+--dialog:ç¿ïW,pos={};
+local num=obj.track1
+obj.setanchor("pos",num,"line","xyz")
+local dx,dy,dz,sx,sy,sz,theta,pitch,roll,yaw,cal
+local i,j,k,div
+local n,anc=obj.track0,obj.track1
+cal = function(n,m)
+	local a=math.deg(math.atan2(n,m))
+	a = a<0 and a+180 or a
+	return a
+end
+-- tmp=z
+for i=1,anc do
+	div={}
+	for k=1,12 do
+			table.insert(div,pos[3*(i-1)+k])
+	end
+
+	for j=0,n do
+		dx,dy,dz=obj.interpolation(j/n,unpack(div))
+		sx,sy,sz=obj.interpolation(j/n-1,unpack(div))
+		--theta=math.deg(math.acos(dy/math.sqrt((dx-sx)^2+(dy-sy)^2+(dz-sz)^2)))
+		
+		pitch,roll,yaw=
+			cal(dx-sx, dy-sy),
+			cal(dx-sx, dz-sz),
+			cal(dy-sy, dz-sz)
+		--[[
+			math.deg(math.atan2(dy-sy, dx-sx)),
+			math.deg(math.atan2(dx-sx, dz-sz)),
+			math.deg(math.atan2(dy-sy, dz-sz))
+		]]
+
+
+		obj.draw(dx,dy,dz,1,1,pitch,roll,yaw)
+	end
+end

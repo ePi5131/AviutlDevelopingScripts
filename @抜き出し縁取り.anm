@@ -1,0 +1,27 @@
+@Write
+--track0:格納場所,1,100,1,1
+require("rikky_module")
+rikky_module.image("w","NKDS:"..obj.track0)
+NKDS = NKDS or {}
+NKDS[obj.track0] = {x=obj.x, y=obj.y}
+
+@Read
+--track0:読込場所,1,100,1,1
+--track1:サイズ,0,500,10,1
+--track2:X,-2000,2000,0
+--track3:Y,-2000,2000,0
+--dialog:ぼかし,local blur=0;
+require("rikky_module")
+if(rikky_module) and (NKDS[obj.track0]) then
+	obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+	obj.draw(obj.track2,obj.track3)
+
+	obj.setoption("dst","tmp")
+	rikky_module.image("r","NKDS:"..obj.track0)
+	obj.effect("縁取り","サイズ",obj.track1,"ぼかし",blur)
+	obj.setoption("blend","alpha_sub")
+	obj.draw(NKDS[obj.track0].x-obj.getvalue("x"),NKDS[obj.track0].y-obj.getvalue("y"))
+	obj.load("tempbuffer")
+	obj.draw(0,0)
+	rikky_module.image("c","NKDS:"..obj.track0)
+end

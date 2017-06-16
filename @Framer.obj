@@ -1,0 +1,73 @@
+-------------------------------------------------------------
+@Frame_001
+-------------------------------------------------------------
+--track0:進行度,0,100,0
+--track1:ぼかし,0,100,20
+--track2:反転,0,1,0,1
+--dialog:color1/col,local col=0x91F4F0; color2/col,local col2=0x206B6D;
+
+local i
+local af=obj.track0/100
+local uf=1-af
+local af01,af02,af03
+if(af-0.3<0) then af01=0 else af01=(af-0.3)/0.7+0.2    end
+if(af-0.45<0) then af02=0 else af02=(af-0.45)/0.55+0.1 end
+if(af-0.6<0) then af03=0 else af03=(af-0.6)/0.4        end
+
+if(af01>1) then af01=1 end
+if(af02>1) then af02=1 end
+if(af03>1) then af03=1 end
+
+local x,y,z,zom,al=obj.ox,obj.oy,obj.oz,obj.zoom,obj.alpha
+
+
+
+obj.load("framebuffer") --ぼかしバッファ
+obj.effect("ぼかし","範囲",obj.track1)
+obj.effect("クリッピング","上",860, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","角度",-140,"中心X",1000*af+-900*uf)
+obj.effect("斜めクリッピング","角度",-85,"中心X",900*af+-1000*uf)
+obj.draw()
+
+obj.load("framebuffer") --グラデバッファ
+obj.effect("クリッピング","上",850, "右",100, "中心の位置を変更",0)
+obj.effect("グラデーション","幅",1200,"角度",50,"no_color",1,"color2",col2)
+obj.draw(x,y,z,zom,1-(62.1*af+100*uf)/100)
+
+
+obj.load("figure","背景",col2) --左の線のやつ3つ
+obj.effect("クリッピング","上",840, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","幅",120,"角度",130,"中心X",-1980*(1-af01)-1000*af01)
+obj.draw()
+obj.load("figure","背景",col2)
+obj.effect("クリッピング","上",840, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","幅",30,"角度",130,"中心X",-1980*(1-af02)-895*af02)
+obj.draw()
+obj.load("figure","背景",col2)
+obj.effect("クリッピング","上",840, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","幅",10,"角度",130,"中心X",-1980*(1-af03)-855*af03)
+obj.draw()
+
+obj.load("figure","背景") --枠線上
+obj.effect("クリッピング","上",840, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","幅",60,"角度",0,"中心Y",-130)
+obj.effect("グラデーション","幅",1200,"角度",50,"color",col,"color2",col2)
+obj.effect("斜めクリッピング","幅",0,"角度",-140,"中心Y",90,"中心X",-785*uf+1115*af)
+obj.draw()
+
+obj.load("figure","背景",col2) --枠線右
+obj.effect("クリッピング","上",840, "右",100, "中心の位置を変更",0)
+obj.effect("斜めクリッピング","幅",60,"角度",95,"中心X",900)
+obj.effect("斜めクリッピング","幅",0,"角度",-140,"中心Y",-90,"中心X",900)
+obj.effect("単色化","輝度を保持する",0,"強さ",100*af,"color",col)
+obj.draw(x+(-1900*uf))
+
+obj.load("figure","四角形",col2,50) --枠線の四角形
+obj.effect("斜めクリッピング","幅",0,"角度",-85,"中心X",20)
+obj.effect("斜めクリッピング","幅",0,"角度",45)
+obj.effect("単色化","輝度を保持する",0,"強さ",100*af,"color",col)
+obj.draw(x+(-1100*uf+800*af),y+350)
+
+-------------------------------------------------------------
+@CustomFrame
+-------------------------------------------------------------

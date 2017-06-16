@@ -1,0 +1,333 @@
+----------------------------
+@CircleGraph_01
+----------------------------
+--track0:size,0,4000,500,1
+--track1:angle,-1280,1280,0
+--track2:sizeDif,0,500,100
+--track3:cutting,-360,360,0
+--dialog:color/col,local col=0xffffff; color_cut/col,local col2=0x3dfe3d; line,local line=5; 文字表示/chk,local isDisFont=1; font,local font="Impact"; font_size,fontsize=100; バー表示/chk,local isDisBar=1; bar_line,local bar_line=20; bar_col/col,local colb=0xdddddd; difWidth,local bdwidth=0;
+
+require("fan_clipping")
+local size=obj.track0
+local ang=obj.track1
+local cut=obj.track3
+local dif=obj.track2
+local alp=1
+
+local ox,oy,oz=obj.ox,obj.oy,obj.oz
+if(CG_01==nil) then CG_01={} end
+CG_01["cut"]=cut
+
+obj.load("figure","円",col,size,4000)
+obj.setoption("drawtarget","framebuffer")
+obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",cut+ang,"幅",line+3)
+obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",cut+ang-90,"幅",0)
+obj.draw()
+obj.setoption("drawtarget","tempbuffer")
+
+obj.load("figure","円",col,size,line)
+if(cut==0) then
+	fan_clipping(0,0,1)
+else
+	fan_clipping(0,ang,cut)
+end
+obj.draw()
+obj.load("figure","円",col2,size,line)
+fan_clipping(0,ang+cut,360-cut)
+obj.draw()
+
+obj.load("figure","円",col,size-dif,line)
+fan_clipping(0,ang,cut)
+obj.draw()
+obj.load("figure","円",col2,size-dif,line)
+fan_clipping(0,ang+cut,360-cut)
+obj.draw()
+
+
+if(cut<0) then
+	alp=1-cut/360*-1
+else
+	alp=1
+end
+
+if(isDisFont==1) then
+	obj.setfont(font,fontsize)
+	obj.load(tostring(math.floor(cut/360*100)).."%")
+	obj.draw(ox,oy+(size/2)+(alp*50*-1+100),oz,1,alp)
+end
+
+if(isDisBar==1) then
+	obj.load("figure","四角形",colb,size,4000)
+	obj.setoption("drawtarget","framebuffer")
+	obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",0,"幅",bar_line)
+	obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",90,"幅",size-bdWidth)
+	obj.setoption("drawtarget","tempbuffer")
+	obj.draw(ox,oy+200,oz)
+	
+end
+
+
+
+
+
+----------------------------
+@ColorPalette
+----------------------------
+--track0:type,0,1000,0,1
+--track1:size,0,2000,200,1
+--track2:line,0,4000,4000,1
+--track3:表示,0,1,1,1
+--check0:パレット出力,0
+--dialog:テキストを表示する/chk,local isDisText=1;テキストの色/col,local col=0x000000;色を選色/col,local settercik=0x000000;色を配色に追加/chk,local isSetcol=0;配色を配列に追加/chk,local isSetcolArr=0;アンカーを表示する/chk,local isAnchor=0;anchorpos,local anchor={};
+local lst=type
+local type=obj.track0
+local i
+local size=obj.track1
+local line=obj.track2
+local ox=obj.ox
+local oy=obj.oy
+local tmp
+local scpath, oripath=obj.getinfo("script_path")
+local paths
+obj.zoom=1
+local colnum
+local t
+local j
+local pt
+local ptnum
+
+require("colors") --colors.luaより配列を読み込み
+require("rikky_module")
+paths=rikky_module.dir("",".lua")
+
+if(lst(colors)=="table") then
+if(type>0 and type<(#colors+1)) then
+	if(obj.track3==1) then
+		colnum=#colors[type]
+		for i=1,colnum do
+			obj.load("figure","四角形",colors[type][i],size,line)
+			obj.draw(size*(math.ceil(colnum/2))*-1+i*size)
+		end
+		if(isDisText==1) then
+			obj.setfont("メイリオ",100,0,col)
+			obj.load(colors[type]["name"])
+			obj.draw(ox,oy+size)
+		end
+	end
+	if(obj.check0) then
+		if(CP==nil) then CP={} end
+		CP["layer"..obj.layer]={color=colors[type], name=colors[type]["name"]}
+	end
+
+elseif(type==0) then
+	if((isDisText==1) and (obj.track3==1)) then
+		obj.setfont("メイリオ",100,0,col)
+		obj.load("typeは現在"..tostring(#colors).."つ選べます。")
+		obj.draw(ox,oy+size)
+	end
+else
+	if((isDisText==1) and (obj.track3==1)) then
+		obj.setfont("メイリオ",100,0,col)
+		obj.load("無効なtypeです。\ntypeは現在1から"..tostring(#colors).."選べます。")
+		obj.draw(ox,oy+size)
+	end
+end
+
+else
+	obj.setfont("メイリオ",100,0,col)
+	obj.load("colors配列が見つかりませんでした。\n\n正常に読み込まれていないか、\ncolors.luaが削除されている可能性があります。")
+	obj.draw(ox,oy+size)
+end
+
+
+----------------------------
+@SaveInformation
+----------------------------
+--track0:Memory,1,1000,1,1
+
+local i
+local m="m"..tostring(obj.track0)
+local tmp={}
+if(SI==nil) then SI={} end
+
+for i=1,obj.num do
+	if #tmp<obj.num*3 then
+		table.insert(tmp, obj.ox+obj.x)
+		table.insert(tmp, obj.oy+obj.y)
+		table.insert(tmp, obj.oz+obj.z)
+	end
+end
+
+SI[m]=tmp
+
+----------------------------
+@VariousMove
+----------------------------
+--track0:type,0,300,0,1
+--track1:出力,0,1,0,1
+--track2:度合%,-100,100,0
+local lst=type
+local af=obj.track2/100
+local uf=1-af
+local type=obj.track0
+local vmt
+local vms
+local l="layer"..obj.layer
+local inf={}
+
+require("variousmoveTypeTable")
+if(lst(variousmoveTypeTable)=="table") then
+
+	vmt=variousmoveTypeTable
+	vms=vmt[type]
+	inf={x=obj.x, y=obj.y, z=obj.z, w=obj.w, h=obj.h, sw=obj.screen_w, sh=obj.screen_h}
+
+	obj.ox=vms.moveX(obj.ox, obj.index, obj.num, inf)*af+obj.ox*uf
+	obj.oy=vms.moveY(obj.oy, obj.index, obj.num, inf)*af+obj.oy*uf
+	obj.oz=vms.moveZ(obj.oz, obj.index, obj.num, inf)*af+obj.oz*uf
+
+	if(lst(vms.rotationX)=="function") then obj.rx= vms.rotationX(obj.rx, obj.index, obj.num, inf)*af+obj.rx*uf end
+	if(lst(vms.rotationY)=="function") then obj.ry= vms.rotationY(obj.ry, obj.index, obj.num, inf)*af+obj.ry*uf end
+	if(lst(vms.rotationZ)=="function") then obj.rz= vms.rotationZ(obj.rz, obj.index, obj.num, inf)*af+obj.rz*uf end
+
+	if(lst(vms.zooming)=="function")   then obj.zoom= vms.zooming(obj.zoom, obj.index, obj.num, inf)*af+obj.zoom*uf      end
+	if(lst(vms.alpha)  =="function")   then obj.alpha= vms.alpha(obj.alpha, obj.index, obj.num, inf)*af+obj.alpha*uf     end
+	if(lst(vms.aspect) =="function")   then obj.aspect= vms.aspect(obj.aspect, obj.index, obj.num, inf)*af+obj.aspect*uf end
+
+	if(obj.track1==1) then
+		if(VM==nil) then VM={} end
+		VM[l]={af=af, uf=uf, moving=vms, movingName=vms.name}
+	end
+
+else
+	obj.setfont("メイリオ",100,0)
+	obj.load("variousmoveTypeTable配列が見つかりませんでした。\n\n正常に読み込まれていないか、\nvariousmoveTypeTable.luaが削除されている可能性があります。")
+	obj.draw(ox,oy+size)
+end
+
+
+
+
+----------------------------
+@扇クリッピングR+
+----------------------------
+--track0:基準角,-1080,1080,90
+--track1:拡張角,-360,360,0
+--track2:X,-9000,9000,0
+--track3:Y,-9000,9000,0
+--check0:タイプ変更,0;
+--dialog:先端type(0~3),local type=0;先端図形色/col,local figcol=0xffffff;先端図形/fig,local fig="円";設定図形のサイズ,local fgsize=500;設定図形のライン幅,local fgline=250;設定図形の種類/fig,local vefig="円";先端サイズ自動化/chk,local sizeauto=1;先端サイズ,local size=100;先端ライン幅,local line=4000;先端ずれ,local dif=0;
+require("fan_clipping")
+ --rikky氏のfun_clipping.luaが必要です。
+
+if(type<=3 and type>=0) then
+	fan_clipping(0,obj.track0,obj.track1,obj.track2,obj.track3,obj.check0)
+
+	local x,y,z = obj.ox+obj.track2, obj.oy+obj.track3, obj.oz
+	local dx,dy,dz
+	if(sizeauto==1) then
+		size = fgline
+	end
+	obj.load("figure",fig,figcol,size,line)
+
+	if(vefig=="円") then
+		local r = fgsize/2
+		dx, dy, dz=math.sin(obj.track0+obj.track1)*r+x, math.cos(obj.track0+obj.track1)*r+y, z
+		obj.draw(dx,dy,dz)
+	elseif(vefig=="四角形") then
+	elseif(vefig=="三角形") then
+	end
+else
+	obj.setfont("メイリオ",100)
+	obj.load("先端typeが"..type.."に設定されています。\n先端typeの有効範囲は0~3までです。")
+end
+
+obj.setoption("dst", "frm")
+
+----------------------------
+@SimpleGatheredLine
+----------------------------
+--track0:角度,-1270,1270,50
+--track1:幅角度,0,360,20
+--track2:X,-3000,3000,0
+--track3:Y,-3000,3000,0
+--check0:付与図形あり,0
+--dialog:色/col,local col=0x84d7c6;輝度を保持する/chk,local isLumi=0; 線の数,local n=4; 近づける幅,local near=200; 点滅差フレーム,local Flframe=4; 最初に点滅/chk,local firstFl=0; 最後に点滅/chk,local lastFl=1; 点滅時間,local FlTime=3; 付与図形(1-3),local type=1; 付:数,local cn=1; 付:不均一/chk,local UnfCycle=0; 付:差ライン,local difsize=20; 付:サイズ,local size=450; SEED,local seed=259;
+--[[ SimpleGatheredLine  fid:SGL ]]--
+local ang=obj.track0
+local dif=obj.track1
+local cx, cy=obj.track2, obj.track3
+local fid="SGL:"
+
+require("fan_clipping")
+require("rikky_module")
+local write=function(id) rikky_module.image("w",id) end
+local read=function(id) rikky_module.image("r",id) end
+local clear=function(id) rikky_module.image("c",id) end
+local sin=function(n) return math.sin(math.rad(n)) end
+local cos=function(n) return math.cos(math.rad(n)) end
+local disp=true
+local fig
+if(type==1) then
+	fig="円"
+elseif(type==2) then
+	fig="四角形"
+elseif(type==3) then
+	fig="三角形"
+else
+	type=1
+	fig="円"
+end
+--obj.copybuffer("cache:frm","frm")
+--obj.load("figure","背景",col,100,4000)
+--obj.draw()
+obj.effect("単色化","color",col,"輝度を保持する",isLumi,"強さ",100)
+write(fid.."tmp")
+--obj.copybuffer("obj","cache:frm")
+local i,px,py,angr,rdx,rdy
+Flframe=math.floor(Flframe)
+rdx=obj.rand(-difsize/2, difsize/2,seed,  0)
+rdy=obj.rand(-difsize/2, difsize/2,seed+7,0)
+
+
+if(
+	(
+		(obj.time-firstFl<=0) or
+		((obj.totaltime-obj.time)-lastFl<=0)
+	) and
+	(obj.frame%Flframe~=Flframe/2)
+) then
+	disp=false
+end
+
+for i=1,n do
+	angr=ang+(360/n*i)
+	px,py=cos(angr-(dif/2))*near,sin(angr-(dif/2))*near
+	read(fid.."tmp")
+	fan_clipping(0,angr,360-dif,cx+px,cy+py)
+	write(fid..i)
+end
+
+obj.setoption("dst","tmp",obj.w,obj.h)
+for i=1,n do
+	if(disp) then
+		read(fid..i)
+		obj.draw()
+	end
+	clear(fid..i)
+end
+
+if(obj.check0) then
+	obj.load("figure",fig,col,size,4000)
+	if(UnfCycle==1) then
+		obj.effect("マスク","type",type,"マスクの反転",1,"X",rdx,"Y",rdy,"サイズ",size-difsize)
+		if(disp) then obj.draw(cx+rdx,cy+rdy,obj.oz,1,1,0,0,ang-45) end
+	else
+		obj.effect("マスク","type",type,"マスクの反転",1,"X",0,"Y",0,"サイズ",size-difsize)
+		if(disp) then obj.draw(cx,cy,obj.oz,1,1,0,0,ang-45) end
+	end
+	
+end
+
+obj.load("tempbuffer")
+clear(fid.."tmp")

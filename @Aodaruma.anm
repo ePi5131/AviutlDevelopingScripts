@@ -1,0 +1,9 @@
+@îºï™ê›íu
+--track0:type,1,2,1,1
+--track1:îΩì],0,1,0,1
+
+if(obj.track0==1) then
+	obj.ox=obj.ox+obj.screen_w/2*(obj.track1==1 and -1 or 1)
+else
+	obj.oy=obj.oy+obj.screen_h/2*(obj.track1==1 and -1 or 1)
+end

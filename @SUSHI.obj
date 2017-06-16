@@ -1,0 +1,89 @@
+-------------------------------------------------------------
+@SHARI
+-------------------------------------------------------------
+--track0:x軸長さ,0,2000,200
+--track1:y軸長さ,0,2000,200
+--track2:z軸長さ,0,2000,200
+--track3:角変換度,0,100,30
+--check0:光源反射,0
+--dialog:color/col,local col=0xdfdfdf;分割数,local div=28;他Layerから受け取る/chk,local isAcceptOtLayer=0;他レイヤーnum,local othLa=0;
+
+local dx,dy,dz=obj.track0,obj.track1,obj.track2
+local af=obj.track3
+local uf=1-af
+local i,j,init,mx,my,mz
+local dp = function() obj.load("figure","四角形",col,1) end
+if(obj.check0) then
+	require("rikky_module")
+	init=(RR[obj.layer]==nil and false) or RR[obj.layer]==nil
+end
+local jud=function(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)
+	dp()
+	if(obj.check0) then
+		rikky_module.materialdraw_init(init)
+		rikky_module.materialdraw(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)
+	else
+		obj.drawpoly(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)
+	end
+end
+
+
+
+local r=math.min(dx/2,dy/2,dz/2)
+
+-- 描画 ----------------------------------------------
+
+if(obj.check0==false) or (init) then
+
+-- ===== 面 =====
+mx,my,mz=dx/2-r*2,dy/2-r*2,dz/2-r*2
+
+jud( --上面
+	-mx,-my+r,-mz,
+	mx, -my+r,-mz,
+	mx, -my+r,mz,
+	-mx,-my+r,mz
+)
+
+jud(
+	-mx+r,-my,-mz,
+	-mx+r,-my,mz,
+	-mx+r,my, mz,
+	-mx+r,my,-mz
+)
+jud(
+	mx-r,-my,-mz,
+	mx-r,-my,mz,
+	mx-r,my, mz,
+	mx-r,my,-mz
+)
+
+jud(
+	-mx,-my,-mz+r,
+	mx,-my, -mz+r,
+	mx,my,  -mz+r,
+	-mx,my, -mz+r
+)
+jud(
+	-mx,-my,mz-r,
+	mx,-my, mz-r,
+	mx,my,  mz-r,
+	-mx,my, mz-r
+)
+
+
+jud( --下面
+	-mx,my-r,-mz,
+	mx, my-r,-mz,
+	mx, my-r,mz,
+	-mx,my-r,mz
+)
+
+
+
+------------------------------------------------------
+else
+	obj.setfont("メイリオ",80,0,col)
+	obj.load("text","initがnilです。\nrikky_module、または「RikkyReflection」スクリプトが\n正常に設定されていない可能性があります。\n他レイヤーから受け取るときは、ダイアログの\n「他Layerから受け取る」と「他レイヤーnum」を設定\nしてください。")
+	obj.draw()
+end

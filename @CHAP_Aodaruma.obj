@@ -1,0 +1,39 @@
+----------------------------
+@CircleGraph_01
+----------------------------
+--track0:size,0,4000,500,1
+--track1:angle,-1280,1280,0
+--track2:sizeDif,500,0,100
+--track3:cutting,-360,360,0
+--dialog:color/col,local col1=0xffffff;color_cut/col,local col2=0x3dfe3d;line,local line=5;
+require("fan_clipping")
+
+local size=obj.track0
+local ang=obj.track1
+local cut=obj.track3
+local dif=obj.track2
+
+obj.load("figure","四角形",col,size,4000)
+obj.setoption("drawtarget","framebuffer")
+obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",cut,"幅",line)
+obj.effect("斜めクリッピング","中心X",0,"中心Y",0,"ぼかし",0,"角度",cut-90,"幅",0)
+obj.draw()
+obj.setoption("drawtarget","tempbuffer")
+
+obj.load("figure","円",col,size,line)
+fan_clipping(0,ang,cut)
+obj.draw()
+obj.load("figure","円",col2,size,line)
+fan_clipping(0,ang+cut,360-cut)
+obj.draw()
+
+obj.load("figure","円",col,size-dif,line)
+fan_clipping(0,ang,cut)
+obj.draw()
+obj.load("figure","円",col2,size-dif,line)
+fan_clipping(0,ang+cut,360-cut)
+obj.draw()
+
+obj.load("tempbuffer")
+obj.setoption("drawtarget","framebuffer")
+obj.draw()

@@ -1,0 +1,25 @@
+--track0:縦分割数,1,1000,5,1
+--track1:横分割数,1,1000,5,1
+--track3:af,0,100,1,0.01
+
+local dw,dh=obj.track0,obj.track1
+local af=obj.track3/100
+--------------
+local w,h=obj.w,obj.h
+local uf,rw,rh=1-af,w/dw,h/dh
+local i,j
+obj.copybuffer("tmp","obj")
+for i=1,dw do
+	for j=1,dh do
+		obj.load("tempbuffer")
+		obj.effect("クリッピング",
+		"上",rh*(j-1)*af,"下",rh*(dh-(j-1))*af,
+		"左",rw*(i-1)*af,"右",rw*(dw-(i-1))*af,
+		"中心を位置を変更",1
+		)
+		obj.draw(
+			obj.ox-rw*(dw/2-(i))*af,
+			obj.oy-rh*(dh/2-(j))*af
+		)
+	end
+end

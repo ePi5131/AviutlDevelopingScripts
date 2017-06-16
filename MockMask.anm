@@ -1,0 +1,86 @@
+----------------------------------
+ -- MockMask --
+----------------------------------
+--track0:中心X,-5000,5000,0,0.01
+--track1:Y,-5000,5000,0,0.01
+--track2:初期サイズ,0,1000,250,1
+--track3:変化度(%),-200,200,0,0.01
+--check0:自動化,1
+local w,h=obj.w,obj.h
+local l="layer"..obj.layer
+local af=obj.track3/100
+local uf=1-af
+local ufM = uf*-1
+local ang,rev
+local size=obj.track2
+local x=obj.track0+obj.ox
+local li
+
+--afの境界のなめらかさ未対応。モーフィングの部分を加減速をeasing.luaなどを参考にする予定。
+
+obj.copybuffer("cache:tmptmp","tmp")
+obj.copybuffer("cache:obj","obj")
+
+obj.setoption("dst","tmp",obj.screen_w, obj.screen_h)
+
+if(af>=0) then
+	ang=-90
+	rev=1
+elseif(af<0) then
+	ang=90
+	rev=-1
+end
+
+if(af<-1.5) then li=math.abs(af+1.5) else li=0 end
+if(obj.check0) then
+	if(af<=1 and af>=-1) then
+		obj.copybuffer("obj","cache:obj")
+		if(af>=0 and af<=1) then
+			obj.effect("斜めクリッピング","幅",0,"角度",-90,"ぼかし",0,"中心X",af)
+		elseif(af<0 and af>=-1) then
+			obj.effect("斜めクリッピング","幅",0,"角度",-90,"ぼかし",0,"中心X",af+w/4*af)
+		end
+		obj.draw()
+		--obj.copybuffer("cache:back","obj")
+	end
+	
+	if(af<-1) then
+		obj.copybuffer("obj","cache:obj")
+		obj.effect("斜めクリッピング","幅",0,"角度",-90,"ぼかし",0,"中心X",(af+w/4*af)*math.abs(2+af)-w*li)
+		obj.draw()
+		--obj.copybuffer("cache:back","obj")
+	end
+	
+
+	obj.copybuffer("obj","cache:obj")
+	if(af~=0) then
+		if(af>0 and af<=1) then
+			obj.effect("斜めクリッピング","幅",0,"角度",ang*-1,"ぼかし",0)
+			obj.effect("マスク","type",1,"サイズ",w,"縦横比",math.abs(100*uf), "マスクの反転",0)
+			obj.draw(-w/4*af)
+		elseif(af<0 and af>=-1) then
+			obj.effect("斜めクリッピング","幅",0,"角度",ang*-1,"ぼかし",0)
+			obj.effect("マスク","type",1,"サイズ",w,"縦横比",math.abs(100*(1-math.abs(af))), "マスクの反転",1)
+			obj.draw(-w/4*af)
+
+		elseif(af>1) then
+			obj.effect("マスク","type",1,"サイズ",w*math.abs(2-af)+size*math.abs(af-1), "マスクの反転",0)
+			obj.draw((-w/4*af)*math.abs(2-af)+x*math.abs(af-1))
+		elseif(af<-1) then
+			obj.effect("マスク","type",1,"サイズ",w*math.abs(2+af)+size*math.abs(af+1), "マスクの反転",1)
+			obj.draw((-w/4*af)*math.abs(2+af)+x*math.abs(af+1))
+		end
+	else
+	end
+	--obj.copybuffer("cache:mask","frm")
+	
+	
+else
+end
+
+
+obj.load("tempbuffer")
+obj.copybuffer("tmp","cache:tmptmp")
+
+--もともとcopybufferで描画させるのをsetoptionで直接バッファに描画させることに変更。
+--rikky氏のfan_clippingを参考にしたかったが、うまくいっていないのでとりあえずこの方法で試してみる。 15:38 2016/11/05

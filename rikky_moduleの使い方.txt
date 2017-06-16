@@ -1,0 +1,1953 @@
+--############前書き######################################
+--########################################################
+--########################################################
+--########################################################
+--[[
+このdllが対応しているAviutl本体のバージョンは
+0.99i6(バージョン表記までなら0.96g)から1.00までです
+拡張編集exedit.aufのバージョンは
+0.89jから0.92までです
+現在(2016/8/13)までの最新版には対応しています
+ただしAviUtl本体と拡張編集との対応の兼ね合いで拡張編集は0.89l以降が推奨環境です
+ちなみに0.89lとは2011年に発表されたバージョンなので、もう誰も使っていないと思われます
+このdllのバージョンは1.0です
+
+where_is_rikky_module.dll.exeはお使いのaviutl.exeをドロップするとお使いの環境内になるrikky_module.dllをすべて探して
+最新のものだけを最適な場所に置きなおすものです
+名前のis以降のrikky_module.dllの部分を変えて、別のdll名などにするとそのファイルを同じように探すことができます
+
+]]--
+--########################################################
+--########################################################
+--########################################################
+--########################################################
+
+--************使い方**************************************
+--********************************************************
+--********************************************************
+--[[
+このDLLはscriptフォルダかexedit.aufがあるフォルダに置いてください
+全員がこのように置いてくれたならば、以下のようなことをする必要もなります
+dllを使う方法として一般的にはrequire関数を用いて
+require("rikky_module")とします
+しかしこれはrikky_module.dllがないとエラーになりスクリプト全体が動かなくなります
+作ったスクリプトにおいてこのdllの関数が必要なものならばrequireを用いても問題ないですが
+あると便利ですよ程度に用いるの場合は
+local f=package.loadlib(path.."rikky_module.dll","luaopen_rikky_module")
+という一文を追加します
+このpathはobj.getinfo("script_path")で得られる、そのスクリプトファイルがある階層の絶対パスです
+このfがnilならばrikky_module.dllがないことになるのでその処理をしなければいいだけになります
+例としては
+local f=package.loadlib(path.."rikky_module.dll","luaopen_rikky_module")
+if f then
+f().file(1)
+end
+のようになります
+f().がrikky_module.と同じ役割を担うのであとは具体的に使いたい関数を.(ピリオド)のあとにつけるだけです
+もしくはcpathを用いて
+if rikky_module == nil then
+	local CPATH = {}
+	local cpath = package.cpath .. ";"
+	local n
+	while(1)do
+		n = cpath:find(";")
+		if n then
+			CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+			cpath = cpath:sub(n + 1, #cpath)
+		else
+			break
+		end
+	end
+	if not CPATH[2]:find("script\\?.dll") then
+		CPATH[3]=CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+		package.cpath = package.cpath .. ";" .. CPATH[3]
+	end
+	for i=1,#CPATH do
+		local f=io.open(CPATH[i]:gsub("?", "rikky_module"),"rb")
+		if f then
+			require("rikky_module")
+			f:close()
+			break
+		end
+	end
+end
+のようにしすれば、常にアニメーション効果ファイルと同じ階層にrikky_module.dllがある必要はなく、単にscriptフォルダやpluginsフォルダあればいいことになります
+どちらかをスクリプト内でコピペしていただければ、使いやすい環境になるはずです
+以降具体的な使い方をアニメーション効果を用いて@例として紹介します
+]]--
+--********************************************************
+--********************************************************
+--********************************************************
+--[[
+できること一覧
+・ファイル選択 > 134行目参照
+・フォルダ選択 > 134行目参照
+・フォント選択 > 134行目参照
+・リスト表示 > 407行目参照
+・キーボードの状態 > 221行目参照
+・マウスの位置取得 > 991行目参照
+・フォルダの中身取得 > 285行目参照
+・png保存 > 348行目参照
+・jpg保存 > 348行目参照
+・bmp保存 > 348行目参照
+・デスクトップキャプチャ― > 378行目参照
+・AviUtlと拡張編集のヴァージョンとパス取得 > 461行目参照
+・画像と動画オブジェクトのファイル名取得 > 472行目参照
+・現在のフレーム数(とプロジェクト全体でのフレーム数)の取得 > 480行目参照
+・合成モードの番号取得 > 485行目参照
+・描画先が仮想バッファかフレームバッファかの状態取得 > 493行目参照
+・使用可能拡張子取得 > 510行目参照
+・つけたオブジェクトが図形なのか動画オブジェクトなのかなどの取得 > 517行目参照
+・図形やテキストの色取得 > 534行目参照
+・rootやシーンなどの番号取得 > 544行目参照
+・オブジェクトのプロジェクトにおける開始フレームと終了フレーム数の取得 > 549行目参照
+・つけているフィルタ名取得(obj.getoption("script_name")では取得できない標準のフィルタも取得できます) > 555行目参照
+・編集中かなどの状態取得 > 570行目参照
+・ウィンドウハンドルの取得 > 578行目参照
+・オブジェクトが選択されているかの取得 > 587行目参照
+・直前のテキストオブジェクトのテキスト内容や文字寄せなどの情報取得 > 592行目参照
+・裏面描画のフラグ取得 > 613行目参照
+・カメラを向くのフラグ取得 > 618行目参照
+・シャドー有効かのフラグ取得 > 623行目参照
+・アンチエイリアスのフラグ取得 > 628行目参照
+・ブレンドモードの強制モードのフラグ取得 > 632行目参照
+・グループ制御の位置や向きの取得 > 636行目参照
+・背景をテクスチャにしたobj.drawpolyみたいな描画関数 > 736行目参照
+・type関数の拡張 > 701行目参照
+・文字列find関数 > 701行目参照
+・obj.getaudioを拡張した関数 > 781行目参照
+・unicode変換関数 > 912行目参照
+・UTF-8変換関数 > 912行目参照
+・座標回転関数 > 1326行目参照
+・ダイアログ数値の書き換え関数 > 1443行目参照
+・データ保存と読込関数 > 1378行目参照
+・画像データの一時保存と読込関数 > 1469行目参照
+・カメラのシャドー(光源)の位置や精度の取得 > 1527行目参照
+・カメラのパラメータのより詳しい値の取得 > 1527行目参照
+・指定した文字列の名前の変数作成 > 1610行目参照
+・6種類のカラーコードの変換と逆変換 > 1665行目参照
+・イメージの輪郭座標抽出 > 1771行目参照
+・回転変換と直交座標変換 > 1809行目参照
+・文字列呼び出し > 1898行目参照
+]]
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--ファイル選択について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_get.dllとrikky_module.dllはファイル選択やフォント選択を別窓で行い選択をサポートするものです
+"ファイル選択"を使う場合はrikky_get.file関数を使います
+"フォルダ選択"を使う場合はrikky_get.fold関数を使います
+"フォント選択"を使う場合はrikky_get.font関数を使います
+"ﾌｧｲﾙ"を使う場合はrikky_module.file関数を使います
+"ﾌｫﾙﾀﾞ"を使う場合はrikky_module.fold関数を使います
+"ﾌｫﾝﾄ"を使う場合はrikky_module.font関数を使います
+どれらも使い方は同じです
+require("rikky_get")またはrequire("rikky_module")でdllをロードします
+次に"ファイル選択"か"フォント選択"を記述した枠の番号を引数にします
+その枠に文字列が入るので""で囲むようにしてください
+文字列が入る枠になにかしらの文字を記入すると、それがトリガーとなって別窓が開きます
+関数の記述場所はどこでも大丈夫ですが、頭の方がいいかと思います
+初めから入力しておくことも可能です
+同じアニメーション効果やカスタムオブジェクトに複数設定できます
+「リアルタイムでプレビューするにチェックが入っていないと反応しません」
+などと今まで書いていましたが
+rikky_module.file、rikky_module.fold、rikky_module.font、rikky_module.listは自動的にリアルタイムビューをオンにするように調節しています
+ほとんどの拡張編集で動作確認してあります。
+rikky_get.dllとrikky_module.dllの違いは"ファイル選択"か"ﾌｧｲﾙ(数字)"の違いです
+文字数を抑えたい場合はrikky_module.dllの方を使ってください
+といいますか、できるだけ、rikky_module.dllの方を使ってください
+またrikky_module.dllはextension.dllとany_key.dllも包括させています
+アスタリスクやドルマークを使った挙動もrikky_module.dllだけ可能です
+以下具体例を見てください
+]]--
+
+@例1
+--dialog:ﾌｧｲﾙ1,a="";色,b=0xff;ﾌｧｲﾙ3,c="";
+require("rikky_module")
+rikky_module.file(1,3)--1番目と3番目にあるので、項目の名前を"ﾌｧｲﾙ1"、"ﾌｧｲﾙ3"との名前をしていして、引数を1と3にします
+--その他、0以下や17以上の引数は無効です
+--フォルダ選択やフォント選択、リスト選択も使い方はおおよそ同じです
+
+
+@例2
+--dialog:*ﾌｧｲﾙ1,a="";
+require("rikky_module")
+rikky_module.file(1)--先頭にアスタリスク*をつけるとファイル名だけになります
+--アスタリスクが付けられるのはrikky_module.file関数だけです
+--[
+rikky_getの場合は引数をマイナスにするとファイル名だけになります
+require("rikky_get")
+rikky_get.file(-1)
+]]
+
+@例3
+--dialog:$ﾌｧｲﾙ1,a="$だけ記入";
+require("rikky_module")
+rikky_module.file(1)--先頭に$(ドルマーク)をつけると$を入力したときのみ反応するようにすることが可能です
+
+@例4
+--dialog:$*ﾌｧｲﾙ1,d="$だけを記入";ﾌｫﾙﾀﾞ2,e="";$ﾌｫﾝﾄ3,f="$だけを記入";ﾌｫﾝﾄ4,g="";
+require("rikky_module")
+rikky_module.file(1)--ドルマークとアスタリスクを同時に使う場合は上記の順番にします
+rikky_module.fold(2)
+rikky_module.font(3,4)
+
+@例5
+--dialog:ﾌｫﾝﾄ1,a="";
+local path=obj.getinfo("script_path")
+while(string.sub(path,#path,#path)=="\\") do
+path=string.sub(path,1,#path-1)
+end
+path=path.."\\rikky_module.dll"
+local t=io.open(path,"r")
+if t then
+t:close()
+require("rikky_module")
+end
+--require関数はrikky_module.dllがないとエラーを吐いて、スクリプト自体がエラーになります
+--それを回避するためにこのようにdllがあるかを確かめる方法があります
+--冒頭で説明した方法とは別の方法でdllがあるかを確認します
+--もしrikky_module.dllがなくともエラーを出すことなくフォントを記入する
+--ただしスクリプトと同じ階層にdllがないと意味をなさないです
+
+@例6
+--dialog:$*getpath,a="";ﾌｧｲﾙ2,b="";パス,c="";ﾌｫﾙﾀﾞ4,d="";ﾌｫﾙﾀﾞget,e="";font,f="";ﾌｫﾝﾄ7,g="";
+require("rikky_module")
+rikky_module.file(1,"getpath",2,3,"パス")--このように枠の順番の次に枠の名前の文字列を入れると枠の名前を指定できます
+rikky_module.fold(4,5,"ﾌｫﾙﾀﾞget")--rikky_module.foldも同様にできます
+rikky_module.font(6,"font",7)--rikky_module.fontも同様にできます
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--キー状態取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+any_key.dllはAviutlのキーボード入力をサポートするものです
+any_key.board関数とrikky_module.key関数は使い方が同じです
+require("rikky_module")で関数をロードします
+キーボードと数字の対応は
+http://e-words.jp/p/r-ascii.html
+http://wisdom.sakura.ne.jp/system/winapi/win32/win32.html
+で調べてください
+引数で指定した仮想キーの状態が入ったテーブルで戻します
+引数の数はいくつでも可能です
+押されているときはそのキーがtrueになり、押されていない場合はfalseになります
+エラーの場合はnilが返ります
+rikky_module.key関数は文字での指定も可能です
+対応している文字
+ローマ字26文字(大文字小文字どちらも可)
+0～9の数字(テンキーではない)
+ENTERまたはRETURN
+CTRL
+SHIFT
+ALT
+F1～F24(ファンクションキー)
+←
+↑
+→
+↓
+LB(マウスの左クリック)
+RB(マウスの右クリック)
+これらの使いたい文字を""で囲んで引数にします
+また引数の最後に"PASSED"を指定すると、リアルタイムでの反応ではなくなります
+]]
+
+@例7
+require("rikky_module")
+a=rikky_module.key(65,13,0x25)--変数aにAキーとエンターキーと左キーの状態が入ります
+--a=rikky_module.key("LB","ENTER","←")--このように文字で指定することも可能です
+state={
+	A=a[1],
+	ENTER=a[2],
+	LEFT=a[3]
+}--このようにするとわかりやすいかもしれません
+if not string.find(tostring(pos),"table:") then
+	pos={x=0,y=0}
+end
+if state.LEFT then
+	pos.x=pos.x-10--左に移動させる
+end
+if state.A and pos.y==0 then
+	pos.y=pos.y-300--ジャンプさせる
+end
+if pos.y<0 then
+	pos.y=pos.y+10
+	if 0<pos.y then
+		pos.y=0
+	end
+end
+if state.ENTER then
+	pos={x=0,y=0}--初期化
+end
+obj.ox=obj.ox+pos.x
+obj.oy=obj.oy+pos.y
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--フォルダファイル取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+extension.dllはフォルダに入っているファイルをすべて取得するのをサポートするものです
+extension.dir関数とrikky_module.dir関数はだいたい使い方が同じです
+require("rikky_module")でdllをロードします
+第一引数にファイルを取得するフォルダのパスを指定します
+第二引数以降は取得したい目的の拡張子を指定します
+第二引数に""空文字を入れるとフォルダを指定します
+第二引数を"*all"にするとフォルダ内のすべてのファイルパスを取得できます
+拡張子はextension.dllだと大文字小文字は別のものとだと判断されます
+rikky_module.dllだと大小関係なく同じものだと判断されます
+戻り値は指定の拡張子のファイルのフルパスが入ったテーブルが返ります
+第一引数のパスが不適な場合は空のテーブルが返ります
+]]
+
+@例8
+require("rikky_module")
+a=rikky_module.dir("C:\\Aviutl","jpg",".png")
+--Aviutlフォルダにあるjpgファイルとpngファイルがaに入ります
+--ピリオド(.)が付いていてもいなくても反応します
+--入る順番は名前順です
+--1.jpg,2.png,3.JPGがあればa[1]は"C:\\Aviutl\\1.jpg"、a[2]は"C:\\Aviutl\\2.png"だけになります
+
+@例9
+require("extension")
+require("rikky_module")
+a=extension.dir("C:\\Aviutl","mp4","MP4")
+--Aviutlフォルダに"mp4"と"MP4"が混ざっていた場合はこのように二種類引数を用意する必要があります
+b=rikky_module.dir("C:\\Aviutl","mp4")
+--これだと"MP4"も"mp4"と認識されるようになります
+--引数を大文字にしても小文字に変換されます
+--拡張子の大小で判別したい場合はextension.dllを使ってください
+
+@例10
+--file:
+require("extension")
+for i=#file,1,-1 do
+	if string.sub(file,i,i)=="\\" then
+		file=string.sub(file,1,i)
+		break
+	end
+end--このようにファイルを参照して、そのフォルダのパスを取得できます
+--=rikky_module.dir関数のフォルダのパスはfileそのままでもフォルダを検索してくれます
+
+--第一引数の最後に\\があってもなくても可です
+a=extension.dir(file,"jpg")--jpgのファイルを取得します
+for i=1,#a do
+	obj.load("image",a[i])
+	obj.draw(0,i*200)
+end
+
+@例11
+--dialog:ﾌｫﾙﾀﾞ1,a=""
+require("rikky_module")
+rikky_module.fold(1)--この関数でフォルダのパスを取得できます
+b=rikky_module.dir(a,"")--このaのパス先のフォルダ内にあるフォルダのパスを取得します
+for i=1,#b do
+	obj.load("text",b[i])
+	obj.draw(0,i*200)
+end
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--画像保存について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはオブジェクトを画像ファイルに保存することもサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.png関数とrikky_module.jpg関数とrikky_module.bmp関数の三つを用意しています
+rikky_module.png("ファイル名")、rikky_module.jpg("ファイル名")のように使います
+ファイル名の最後の".png"や".jpg"や".jpeg"や".bmp"をつけても付けなくても自動で判断して出力ファイルにつけます
+戻り値はありません
+]]
+
+@例12
+--check0:保存,0
+--dialog:ファイル名,a="";
+require("rikky_module")
+if obj.check0 then
+	rikky_module.png(a)--aviutl.exeがある階層にaの名前のpng画像ができるはずです
+	--rikky_module.png("C:\\User\\"..a..".PNG")--保存するフォルダを指定するとそこにできまし、拡張子をつけても画像は出来上がります
+end
+
+@例13
+--check0:保存,0
+--dialog:ファイル名,a="";
+a=a..".png"--別の拡張子をつけても自動で後に".jpg"がつきます
+require("rikky_module")
+if obj.check0 then
+	rikky_module.jpg(a)--aviutl.exeがある階層にaの名前のjpg画像ができるはずです
+end
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--デスクトップキャプチャーについて
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllではデスクトップの画像をAviutlに描画することもサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.desk関数を使います
+引数は
+rikky_module.desk(
+uint x,uint y,int w,int h,BOOLEAN(または1か0) Flag
+)
+です
+xとyはデスクトップ上の左上からの座標です
+wとhはオブジェクトの長さです
+0だと元の長さになります
+マイナス入力も可能です
+Flagはマウスの描画を有効にするか決めるものです
+戻り値はありません
+]]
+
+@例14
+--track0:x,0,2000,0,1
+--track1:y,0,2000,0,1
+--track2:w,-2000,2000,0,1
+--track3:h,-2000,2000,0,1
+--check0:マウス,0
+require("rikky_module")
+rikky_module.desk(obj.track0,obj.track1,obj.track2,obj.track3,obj.check0);
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--リストダイアログ表示について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはリストアップもサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.list関数を1回呼び出すと、リストが1つ呼び出されます
+第1引数はリストアップさせたい項目の番号です
+番号は設定ダイアログの上から数えた番号です
+その項目の名前は半角でﾘｽﾄ番号とします
+1番目ならﾘｽﾄ1、16番目ならﾘｽﾄ16とします
+次にリストアップさせたい文字列を入れたテーブル変数を指定します
+基本はこの2つで完了しますが、テーブル変数の次に1を入れると選択された番号が入力欄に入ります
+何もなければリストの文字列がそのまま入ります
+ファイル選択やフォント選択同様$を項目名の先頭につけると$だけが入力されたときにだけ反応するようにできます
+]]
+@例15
+--dialog:ﾘｽﾄ1,local list="";$ﾘｽﾄ2,local list1=""
+require("rikky_module")
+rikky_module.list(1,{"子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"})
+local a={"北","東","南","西"}
+rikky_module.list(2,a,1)
+
+@例16
+--dialog:$選んで,local list="";$数値選択,local list1=0
+require("rikky_module")
+--[[
+リスト項目のテーブルの前に項目名を記述することも可能です
+$をつける場合も関数に記述する項目名には$はつけません
+また文字列でなくてもリストボックスを出すことはできますが
+確実にエラーになります
+$数値選択,local list1="0"
+のように一度文字列でlist1で数値を引き受けてからtonumber関数で数値化する方法をお勧めします
+list1=tonumber(list1)
+if list1==nil then
+list1=0
+end
+これで文字列list1が数値list1になります
+文字列が数値にならない場合はnilになるので、その場合の処理だけすれば問題ないはずです
+]]
+rikky_module.list(1,"選んで",{"子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"})
+local a={"北","東","南","西"}
+rikky_module.list(2,"数値選択",a,1)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--Aviutlのスクリプト各種情報取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは本家同様様々な情報を取得することをサポートしています
+require関数でrikky_module.dllをロードするとrikky_module.getinfo関数が使えます
+欲しい情報を引数に文字列で指定します
+第二引数にオプションの数値を指定することもできます
+戻り値は数値か文字列のどちらかです
+
+"version" > 各種バージョンを取得できます
+version=rikky_module.getinfo("version" [,option])のように使います
+オプションの数値なし、または指定外の数値の場合はAviUtl本体のバージョンが返ってきます
+最新のものは1.00、1つ前が0.99mなどの文字列が返ってきます
+ただし未対応の場合は空文字""の文字列が返ってきます
+オプションの数値が1の場合は、拡張編集exedit.aufのバージョンが返ってきます
+最新のものは0.92、1つ前が0.91cなどの文字列が返ってきます
+ただし未対応の場合は空文字""の文字列が返ってきます
+オプションの数値が2の場合は、このdllのバージョンが返ってきます
+最新のものは1.0です
+
+"path" > aviutl.exeやexedit.aufのあるバス(場所のフォルダ)が返ってきます
+path=rikky_module.getinfo("path" [,option])のように使います
+オプションの数値なし、または指定外の数値の場合はAviUtl本体のパスが返ってきます
+オプションの数値が1の場合は、拡張編集exedit.aufのパスが返ってきます
+オプションの数値が2の場合は、デスクトップのパス返ってきます
+オプションの数値が3の場合は、画像オブジェクトと動画オブジェクトのファイルのパスを返します
+ただし、画像オブジェクトと動画オブジェクト以外で使うと空文字""が返ってきます
+
+"frame" > プロジェクト全体に対する現在のフレーム数とプロジェクト全体のフレーム数が返ってきます
+frame,totalframe=rikky_module.getinfo("frame")のように使います
+戻り値の1番目が現在のフレーム数、2番目が全体のフレーム数です
+正しい情報が得られなかった場合は、nilが返ってきます
+
+"blend" > 合成モードをした場合の数値が返ってきます
+blend=rikky_module.getinfo("blend" [,option])のように使います
+オプションの数値なし、または指定外の数値の場合はobj.setoption("blend")で指定した合成モードが返ってきます
+通常は0、加算は1、減算2、乗算3、スクリーン4、オーバーレイ5、比較(明)6、比較(暗)7、輝度8、色差9、陰影10、明暗11、差分12です
+また"alpha_add"は20、"alpha_max"は21、"alpha_sub"は22、"alpha_add2"は25です
+オプションの数値が1の場合は、オブジェクトの合成モードが返ってきます
+正しく情報が取得できなかった場合は空文字""が返ってきます
+
+"buffer" > 描画先が仮想バッファならば"tmp"、描画先がフレームバッファならば"frm"が返ってきます
+buffer=rikky_module.getinfo("buffer")のように使います
+rikky_module.getinfoを実行した段階の描画先です
+正しく情報が取得できなかった場合は空文字""が返ってきます
+
+"aup" > 現在AviUtlが保持しているプロジェクトファイルのaupまでのパス(プロジェクト名)を返します
+aup=rikky_module.getinfo("aup" [,option])のように使います
+オプションの数値なし、または指定外の数値の場合はフルパスかつ拡張子が付いた文字列が返ります
+オプションの数値が1の場合は、パス名単体の文字列が返ります
+プロジェクトファイルの情報がない場合や未設定の場合は空文字""が返ってきます
+
+"output" > 現在AviUtlが保持している書き出しするファイル名のパス(ファイル名)を返します
+output=rikky_module.getinfo("output")のように使います
+オプションの数値なし、または指定外の数値の場合はフルパスかつ拡張子が付いた文字列が返ります
+オプションの数値が1の場合は、パス名単体の文字列が返ります
+出力の情報がない場合や未設定の場合は空文字""が返ってきます
+
+"input" > 現在AviUtlが読み込むことができる拡張子のテーブルとその数を返します
+input,num=rikky_module.getinfo("input")のように使います
+inputはテーブル変数で、中身は使える拡張子が.(ピリオド)付きの文字列です
+この拡張子は表面上得られるもので、この拡張子以外も使える場合があります
+例えば、画像gifは拡張編集ならば扱えますが拡張子としては得ることができません
+正しく取得できなかった場合はnilが返ってきます
+
+"object" > 関数が呼び出されたときのオブジェクトの種類の文字列を返します
+object=rikky_module.getinfo("object")のように使います
+動画オブジェクトならば、動画ファイル
+画像オブジェクトならば、画像ファイル
+テキストオブジェクトならば、テキスト
+図形オブジェクトならば、図形
+フレームバッファオブジェクトならば、フレームバッファ
+音声波形オブジェクトならば、音声波形
+シーンオブジェクトならば、シーン
+直前オブジェクトならば、直前オブジェクト
+フィルタオブジェクトならば、フィルタオブジェクト
+カスタムオブジェクトならば、カスタムオブジェクト
+グループ制御ならば、グループ制御
+その他不明や未対応のオブジェクトならば、不明
+の文字列になります
+正しく取得できなかった場合は空文字""が返ってきます
+
+"color" > 図形オブジェクトかテキストオブジェクトか音声波形オブジェクトの色の数値を返します
+color=rikky_module.getinfo("color" [,option])のように使います
+オプションの数値なし、または指定以外の場合は0xRRGGBBの16進数の数値が返ってきます
+オプションの数値が1の場合は、R、G、Bが別々で返ってきます
+またテキストの場合はテキストの色と縁の色の2つが返ってきて、オプションを指定すると合計で6つの値が返ってきます
+r1,g1,b1,r2,g2,b2=rikky_module.getinfo("color",1)
+と上のようになります
+上記のオブジェクト以外の場合は、nilが返ってきます
+また正しく情報が取得できなかった場合もnilが返ってきます
+
+"root" > オブジェクトが置かれているシーンやルートの数値を返します
+root=rikky_module.getinfo("root")のように使います
+rootで使えば0、シーン1で使えば1となります
+正しく情報が取得できなかった場合はnilが返ってきます
+
+"start_end" > オブジェクトの始まりと終わりのフレーム数を返します
+start,end=rikky_module.getinfo("start_end")のように使います
+"frame"で得られるフレーム数はシーン越しでは正しく反映されないのでシーン内でフレーム数を必要とするときは
+start+obj.frameとすればそのシーンにおける現在のフレーム数を得ることができます
+正しく得られなかった場合はnilが返ってきます
+
+"filter" > オブジェクトにつけているフィルタ効果やアニメーション効果の名前のテーブルと現在の位置と総数を返します
+filter_name,now,num=rikky_module.getinfo("filter" [,option])のように使います
+フィルタ効果の名前はAviUtlに記されているそのもので、アニメーション効果は使っているスクリプト名です
+オプションの数値なし、または指定以外の場合はフィルタ効果が無効の場合でも含まれます
+オプションの数値が1の場合は、フィルタ効果が無効の場合はfilter_nameには含まれません
+例としてぼかし、シャドー、このdllを使ったアニメーション効果、グラデーションの場合は
+filter_name[1]="ぼかし"
+filter_name[2]="シャドー"
+filter_name[3]=アニメーション効果の名前
+filter_name[4]="グラデーション"
+となります
+nowは3になります(ただし、カスタムオブジェクト内で使う場合は正しいnowは取得できません(ゼロであることが前提だからです))
+numは4です
+正しく得られなかった場合はnilが返ってきます
+
+"state" > AviUtlが編集中か書き出し中か再生中かのいずれかの状態を返します
+state=rikky_module.getinfo("state")のように使います
+obj.getinfo("saving")でも同様のことが可能ですが、再生中かは取得できないのでこちらの方が使い勝手はいいです
+state="editing"のときは編集中です
+state="saving"のときは書き出し中です
+state="playing"のときは再生中です
+正しく取得できなかった場合は、空文字""が返ってきます
+
+"hwnd" > AviUtlの各ウィンドウのハンドルを返します
+hwnd,window_name=rikky_module.getinfo("hwnd" [,option])のように使います
+オプションの数値なし、または指定以外の場合はメインウィンドウのハンドルと名前が返ります
+オプションの数値が1の場合は、オブジェクトの操作ウィンドウのハンドルと名前が返ります(ディスプレイ上になくとも、ハンドルは存在しています)
+オプションの数値が2の場合は、再生ウィンドウのハンドルと名前が返ります(ディスプレイ上になくとも、ハンドルは存在しています)
+オプションの数値が3の場合は、現在表示されているウィンドウのハンドルと名前が入ったテーブル2つと、テーブルの要素数が返ります
+オプションの数値が4の場合は、すべてのウィンドウのハンドルと名前が入ったテーブル2つと、テーブルの要素数が返ります
+正しく取得できなかった場合は、nilが返ってきます
+
+"focus" > オブジェクトが選択中かどうかをブーリアンで返します
+focus=rikky_module.getinfo("focus")のように使います
+選択中はtrueを返し、それ以外はfalseを返します、つまりobj.getoption("gui")と同じです(作った後、存在に気付いた)
+正しく取得できなかった場合は、falseが返ってきます
+
+"text" > テキストオブジェクトに関する情報を返します
+text=rikky_module.getinfo("text" [,option])のように使います
+オプションの数値なし、または指定以外の場合は直前のテキストオブジェトの文字列を返します
+オプションの数値が1から100の間の場合は、指定のレイヤのテキストオブジェクトの文字列を返します
+数値はレイヤ番号を表していますが、そのレイヤにテキストオブジェクトがない場合や、その他のオブジェクトの場合は予期せぬ動きをする場合があります
+また数値指定の場合は<?～?>で表現された文字列ではなく<?～?>そのものを返すようになります
+オプションの数値が0の場合はテキストオブジェトの各種情報が入ったテーブルを返します
+text={
+	type=文字装飾(0から4までの数値で、0が装飾なし、1が影、2が薄い影、3が縁取り、4が薄い縁取り)
+	autoadjust=長さを自動調節(0か1の数値で、0がチェックなし、1がチェックあり)
+	soft=滑らかにする(0か1の数値で、0がチェックなし、1がチェックあり)
+	monospace=等間隔モード(0か1の数値で、0がチェックなし、1がチェックあり)
+	align=文字寄せ(0から17までの数値で、0が横書左上、1が横書中上、2が横書右上、3が横書左中、4が横書中中、5が横書右中、6が横書左下、7が横書中下、8が横書右下、9が縦書右上、10が縦書右中、11が縦書右下、12が縦書中上、13が縦書中中、14が縦書中下、15が縦書左上、16が縦書左中、17が縦書左下)
+	spacing_x=字間(-100から100までの数値)
+	spacing_y=行間(-100から100までの数値)
+	precision=高精度(0か1の数値で、0がチェックなし、1がチェックあり)
+	font=フォント
+}
+つけたオブジェクトがテキストオブジェクトではない場合はnilを返します
+正しく取得できなかった場合は、空文字""が返ってきます
+
+"culling" > 裏面を非表示するかの数値を返します
+culling=rikky_module.getinfo("culling")のように使います
+戻り値の数値は、0が裏面も描画、1が裏面の非描画に対応しています
+オブジェクト側の裏面非表示にチェックを入れている場合は、obj.setoption("culling")で設定していても1を返します
+
+"billboard" > カメラ制御オプションのカメラの方向を向くの数値を返します
+billboard=rikky_module.getinfo("billboard")のように使います
+戻り値の数値は、0がカメラの方向を見るのオプションはなし、1のときは横方向だけ見るを有効、2のときは横と縦の方向だけを見るを有効、3は横と縦の方向と回転を有効に対応しいます
+フィルタのカメラ制御オプション以外にもobj.setoption("billboard")で設定した場合の数値も取得できます
+
+"shadow" > カメラ制御オプションのシャドー対象の数値を返します
+shadow=rikky_module.getinfo("shadow")のように使います
+戻り値の数値は、0がシャドー対象無効、1がシャドー対象有効に対応しています
+フィルタのカメラ制御オプション以外にもobj.setoption("shadow")で設定した場合の数値も取得できます
+
+"antialias" > アンチエイリアスが有効かの数値を返します
+antialias=rikky_module.getinfo("antialias")のように使います
+戻り値の数値は、0がアンチエイリアス無効、1がアンチエイリアス有効に対応しています
+
+"force" > 合成モードの強制が有効かの数値を返します
+force=rikky_module.getinfo("force")のように使います
+戻り値の数値は、0が強制無効、1が強制有効に対応しています
+
+"group" > グループ制御の情報を返します
+groupinfo, boolean = rikky_module.getinfo("group")のように使います
+戻り値のbolleanは呼び出した際、グループ制御下に入っていればtrue、そうでない場合はfalseになります
+また描画先が仮想バッファになっている場合はfalseになります
+なので、描画先を仮想バッファにする前に呼び出すようにしてください
+groupinfoはテーブル型です
+groupinfo={
+	x=呼び出したオブジェクトに影響するグループ制御のX座標,
+	y=呼び出したオブジェクトに影響するグループ制御のY座標,
+	z=呼び出したオブジェクトに影響するグループ制御のZ座標,
+	zoom=呼び出したオブジェクトに影響するグループ制御の拡大率,
+	Xx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのx成分,
+	Xy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのy成分,
+	Xz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのz成分,
+	Yx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのx成分,
+	Yy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのy成分,
+	Yz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのz成分,
+	Zx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのx成分,
+	Zy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのy成分,
+	Zz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのz成分,
+}
+以上の数値が入っています
+groupinfo.x、groupinfo.y、groupinfo.zは影響するグループ制御の最終的な位置ですので
+複数のグループ制御を使っている場合はその合計値のようになります
+groupinfo.zoomは0から始まり等倍のときは1になります
+こちらの全体での乗算で決まります
+groupinfo.Xxなどは直交軸の3方向のベクトルの各成分です
+通常はXx=1、Xy=0、Xz=0、Yx=0、Yy=1、Yz=0、Zx=0、Zy=0、Zz=1ですが、回転など作用して方向が変化します
+各ベクトルの長さは1になるようにしていますが、誤差などで1未満の場合もあります
+例えばXx=0、Xy=-1、Xz=0、Yx=1、Yy=0、Yz=0、Zx=0、Zy=0、Zz=1だった場合
+オブジェクトのX座標を100にしている場合はグループ制御の影響で空間の座標ではX座標は0、Y座標が-100になります
+またgroupinfo.xが100の場合は最終的にオブジェクトの座標はX座標は100、Y座標が-100になります
+正しく取得できなかった場合はnilが返ります
+]]
+
+@例26
+require("rikky_module")
+--現在の描画先を取得します
+local buffer1=rikky_module.getinfo("buf")
+obj.setoption("drawtarget","tempbuffer")
+local buffer2=rikky_module.getinfo("buf")
+obj.setoption("drawtarget","framebuffer")
+local buffer3=rikky_module.getinfo("buf")
+--呼び出した段階での描画先がそれぞれの変数に収められています
+local str="buffer1="..buffer1.."\n".."buffer2="..buffer2.."\n".."buffer3="..buffer3
+obj.setfont("",50)
+obj.load("text",str)
+
+@例17
+require("rikky_module")
+--aviutlと拡張編集のバージョンを取得します
+obj.setfont("",50)
+obj.load("お使いのAviUtlは\n\""..rikky_module.getinfo("ver",0).."\"\n拡張編集は\n\""..rikky_module.getinfo("ver",1).."\"\nrikky_moduleは\n\""..rikky_module.getinfo("ver",2).."\"\nです")
+obj.draw()
+
+@例18
+require("rikky_module")
+--obj.frameとプロジェクトの現在のフレームを両表表示します
+local objframe=obj.frame
+local objtotalframe=obj.totalframe
+local projectframe,projecttotalframe=rikky_module.getinfo("frm")
+obj.setfont("",50)
+obj.load("オブジェクトのフレーム数と全体のフレーム数は\n"..objframe.."と"..objtotalframe.."です\nプロジェクトの今のフレーム数と全体のフレーム数は\n"..projectframe.."と"..projecttotalframe.."です")
+--使いどころは同じフレームで乱数を使うとき、細かくシードを調節することなく現在のフレーム数をシードにすれば別々の乱数が生成されます
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--タイプ取得と文字検索について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllでは変数の種類の判別もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.type関数を使います
+luaのtype関数と全く同じですが、違いもあります
+複数の引数を持つことができます
+戻り値も引数の数だけ返ってきます
+戻り値は文字列で
+number、string、table、function、userdata、thread、nilのいずれかです
+type関数が既にあるのになぜ用意したかといえば
+ごくまれにtpyeに代入されてしまうケースがあり、typeを関数として使えなくなる可能性があるからです
+私の初期のスクリプトにもtype=○○としてしまったものもあります
+typeなんてありふれていて命名したくなるような変数名に大事な関数を割り当てたlua側に問題があると思います
+rikky_module.dllは文字列検索もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.find(検索対象文字列、マッチさせる文字列)のように二つの引数を使い、検索します
+戻り値はマッチさせる文字列が初めに現れたバイトの位置が返ってきます
+n = rikky_module.find("abdcefg","d")の場合はnは3になります
+n = rikky_module.find("あいうえお","う")の場合はnは5になります
+string.findとほぼ同じです
+]]
+
+@例19
+require("rikky_module")
+local a=1
+local b="b"
+local c={a}
+local d=funciton(x) return x^x end
+A,B,C,D,E=rikky_module.type(a,b,c,d,nil)
+obj.load("<s50>A="..A.."\nB="..B.."\nC="..C.."\nD="..D.."\nE="..E)
+--Aは"number"、Bは"string"、Cは"table"、Dは"function"、Eは"nil"です
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--背景テクスチャ描画関数について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllでは描画関数もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.glassdraw関数とrikky_module.glassdraw_inti関数を使います
+背景をテクスチャにした描画をすることができます
+要するにすけたオブジェクトを描画することができます
+rikky_module.glassdraw_inti関数で初期化してからrikky_module.glassdraw関数で描画します
+rikky_module.glassdrawの使い方はobj.drawpolyと同じです
+rikky_module.glassdraw_inti([option])とオプションを渡すこともできます
+]]
+
+@例20
+require("rikky_module")
+--引数なしでrikky_module.glassdraw_intiを呼びます
+rikky_module.glassdraw_inti({color=0xff0000})
+--obj.drawpolyのように左上から時計回りで四隅の座標x、y、zを順に入れてきます
+rikky_module.glassdraw(-100,-100,-100,100,-100,-100,100,100,-100,-100,100,-100)
+rikky_module.glassdraw(100,-100,100,-100,-100,100,-100,100,100,100,100,100)
+rikky_module.glassdraw(-100,-100,100,-100,-100,-100,-100,100,-100,-100,100,100)
+rikky_module.glassdraw(100,-100,-100,100,-100,100,100,100,100,100,100,-100)
+rikky_module.glassdraw(-100,-100,100,100,-100,100,100,-100,-100,-100,-100,-100)
+rikky_module.glassdraw(100,100,-100,-100,100,-100,-100,100,100,100,100,100)
+
+@例21
+require("rikky_module")
+--引数なしでrikky_module.glassdraw_intiを呼びます
+local option={reverse=1,color=0xff0000}
+rikky_module.glassdraw_inti(option)
+rikky_module.glassdraw(-100,-100,0,100,-100,0,100,100,0,-100,100,0)
+--[[
+rikky_module.glassdraw_intiにはオプションを渡すことができます
+option={
+reverse:テクスチャを左右上下反転させることができます、有効にする場合は1にしてください
+color:テクスチャに色を付けることができます、色は0xFFFFFFのような数値で指定してください
+blur:ぼかしの範囲量を設定できます、有効にする場合は数値を入れてください
+}
+オプションを渡すとき常にすべてを設定する必要はなく、reverseのみの
+option={reverse=1}
+とすることも可能です
+
+]]
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--音声波形取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは音声波形取得もサポートしてます
+require("rikky_module")でdllをロードします
+rikky_module.audiobuffer関数を使います
+使い方はobj.getaudioとほぼ同じで、それを改良したものと大体同じです
+rikky_module.audiobuffer(frame [, type, position, channel, size, resolution, frequency_range])
+戻り値はobj.getaudioで得られるようなテーブルになります
+ただし"audiobuffer"のみの取得で、取得する音声ファイルを指定することはできません
+と、これが基本形です
+rikky_module.audiobuffer関数は前フレームや後フレームの音声も取得できるので使い勝手が多少はあると思います
+以降、詳しい使い方
+
+frame > 再生フレームの数値です
+どのフレーム音を取得するか決めることができます
+のちに設定するpositionで入れる数値が変わってきます
+数値を入れます
+
+type > 取得波形の種類を決める文字です
+PCM、FOURIER、SPECTRUM、DECIBELの4種類があります
+指定方法は"PCM","FOUTIER","SPECTRUM","DECIBEL"のいづれかの文字列を入れます
+PCMとは音の波の形を時間で表したものです(サイン波のようなうねうねしたものです)
+FOUTIERとはPCM波形をフーリエ変換して周波数の強さを表したものです
+SPECTRUMとはPCM波形をフーリエ変換したものを見やすく対数表で表したものです
+DECIBELとは基準音からのパワーの強さの割合で、大きいほど0に近づき、小さいほどマイナスになります
+	パワーが0のとき(無音)はデシベルが-∞になって数値では表現できないので、nilが入ります
+本家とのフーリエ変換とスペクトル変換の計算方法が違うのでPCM以外はobj.getaudioとは一致しません
+""や"p"など適当な文字列の場合や省略した場合、PCMになります
+
+position > 再生フレームの位置を決めます文字です
+相対的位置か絶対的位置かの2種類があります
+相対的位置は"relative"、絶対的位置は"absolute"の文字列を入れます
+相対的位置とは現フレームに対してframeがどのぐらいずれたかを表します
+絶対的位置とはframeが取得フレームを表します
+rikky_module.audiobuffer(0, "pcm", "relative")
+だとobj.getaudio(nil,"audiobuffer","pcm")と同じになります
+rikky_module.audiobuffer(1, "pcm", "relative")
+だと1つ先のフレームのPCMデータを取得できます
+rikky_module.audiobuffer(0, "pcm", "absolute")
+だと常に0フレーム時のPCMデータしか取得しません
+""や"r"など適当な文字列の場合や省略した場合、相対的位置になります
+
+channel > ステレオかモノラルを決める文字です
+ステレオ、モノラルの2種類があります
+指定方法は"stereo"か"monaural"のいずれかの文字列を入れます
+ステレオは波形を右と左の2つ分返します
+L, R = rikky_module.audiobuffer(0, "pcm", "relative","stereo")とこんな感じ
+モノラルは左右の平均値の波形を返します
+L = rikky_module.audiobuffer(0, "pcm", "relative","mono")とこんな感じ
+ただし、ステレオ指定しても元のチャンネル数が1の場合は1つだけしか返しません
+""や"モノラル"など適当な文字列の場合や省略した場合、ステレオになります
+
+size > 取得するサイズを決める数値です
+サイズには上限があります
+PCMだとサンプル周波数割るフレームレート数の値(サンプル周波数44100とフレームレート30の場合は上限は1470です)になります
+FOURIERとDECIBELでは基本サイズ指定はできず、フーリエ変換したときに使ったデータ数になります
+SPECTRUMだと上限がフーリエ変換したときに使ったデータ数までになります
+省略するとそれぞれの上限になります
+
+resolution > 分解能を決める数値です
+フーリエ変換をする際の細かさのことで、0,1,2,3のいずれかを指定します
+obj.getaudioは分解能は1の2048です
+わかり易く説明するとサンプル周波数が44100だとすると分解能が1の場合
+1データ当たり44100/2048でおよそ21.5Hzごとに周波数を区切って計算することになります
+22Hzの音と23Hzの音などは同じ音として見なされて、43Hzとして扱われます
+あんまりよくわからないと思いますが基本のラ音は440Hzでラ♯は466.2Hzなのでこの分解能だと同じ音として扱われます
+要は計算が軽い代わりに音の区別があいまいになるということです
+0は分解能1024です、細かさはおよそ43Hz
+1は分解能2048です、細かさはおよそ21.5Hz
+2は分解能4096です、細かさはおよそ10.7Hz
+3は分解能8192です、細かさはおよそ5.3Hz
+分解能の半分の値がフーリエ変換したときの得られるデータ数になります
+省略すると1になります
+
+frequency_range > FOURIERとSPECTRUMとDECIBELでの範囲を指定するテーブルです
+{下限値、上限値}のように指定します
+下限値、上限値ともに周波数の数値を指定します
+指定できる数値の範囲は0からサンプル周波数の半分(いわゆるナイキスト周波数)です
+この範囲をしていするとFOURIERとDECIBELのサイズも変化します
+SPECTRUMはこの範囲内でsize分だけ分割されます
+L, R = rikky_module.audiobuffer(0, "fourier", "relative","stereo",0,1,{30,10000})とこんな感じ
+これだと30Hzから10000Hzまでの範囲のFOURIERの値を得られます
+省略すると範囲指定なしになります
+
+引数なしで関数を呼び出すとチャンネル数とサンプル周波数が取得できます
+channel, samplerate = rikky_module.audiobuffer()
+基本channelは2になると思います
+samplerateはプロジェクトファイルを作るときに決まると思います
+
+こぼれ話ですが、音声を設定する機能も付けようと思ったのですが
+通常のオブジェクトと音声のオブジェクトはレンダリング時に実行タイミングが違っていて
+正しく反映させることができずに断念しました
+音声用のプラグインを自作してってことだね
+
+]]
+
+@例22
+require("rikky_module")
+--ステレオで左右の波形を取得します
+--positionが"relative"なので相対的な位置での音声取得になり、現在の音声を取得できます
+L,R=rikky_module.audiobuffer(0,"spectrum","relative","stereo",500)
+local w=obj.screen_w
+local h=obj.screen_h
+obj.load("figure","円",0xff0000,10)
+for i=1,#L do
+y=-h*0.5+h*i/#L
+obj.draw(L[i]*0.1-w*0.5,y)
+end
+obj.load("figure","円",0xff,10)
+for i=1,#R do
+y=-h*0.5+h*i/#R
+obj.draw(-R[i]*0.1+w*0.5,y)
+end
+
+@例23
+--rikky_moduleをロードします
+require("rikky_module")
+local buf={}
+--1フレーム前と1フレーム後の音声波形を取得して平均して滑らかにします
+local buf0=rikky_module.audiobuffer(-1,"spectrum","relative","mono")
+local buf1=rikky_module.audiobuffer(0,"spectrum","relative","mono")
+local buf2=rikky_module.audiobuffer(1,"spectrum","relative","mono")
+obj.load("figure","円",0xff00,5)
+for i=1,#buf0 do
+buf[i]=(buf0[i]+buf1[i]+buf2[i])/3
+local x=-400+800*i/#buf0
+obj.draw(x,-buf[i]*0.1)
+end
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--unicodeとUTF-8変換について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは文字コード変換もサポートしてます
+require("rikky_module")でdllをロードします
+rikky_module.convert関数が使えるようになります
+基本的にこの関数は文字列を文字コードに変換と文字コードを文字列に変換ということを処理するためのものです
+rikky_module.convert(string or table [,type, hex, endian])として使います
+戻り値は第一引数に入れた変数が文字列かテーブルかで変わってきます
+
+string > 第一引数に文字列を入れた場合、文字コードが入ったテーブルとその数の2つが返ってきます
+code,num=rikky_module.convert("abcde")
+このようにすると、code={97,98,99,100,101}とnum=5になります
+
+table > 第一引数に文字コードを入れた場合、文字コードを文字列に直したものが返ってきます
+string=rikky_module.convert({97,98,99,100,101})
+このようにすると、string="abcde"のようになります
+
+
+type > 変換する文字コードがshift-jisかunicodeかutf-8を決めます
+unicodeを絡める場合は"unicode"と入れてください
+utf-8を絡める場合は"utf8"と入れてください
+それ以外はshift-jisとして扱われます
+code,num=rikky_module.convert("abcde","unicode")
+このテーブルにはunicode基準の文字コードが入りますが、この例だと半角英数字はshift-jisとは代り映えありません
+
+hex > 16進数で表記するかを決めることができます
+16進数で扱う場合は"hex"と入力してください
+code,num=rikky_module.convert("abcde","unicode","hex")
+とするとcode[1]="0061"と文字列で返ってくるようになります
+文字コードを文字列に変換する場合も同様で文字列で16進数を表記してください
+string=rikky_module.convert({"0061","0062","0063","0064","0065"},"unicode","hex")
+このようにするとstring="abcde"となります
+また"HEX"と大文字で指定すると16進数の英字部分が大文字になります
+
+edian > 上位バイトと下位バイトの扱いを変えます
+unicodeのときのみ使います
+通常はビックエンディアンですが、"little"と入れるとリトルエンディアンになります
+aviutlのexoファイルのテキスト部分もリトルエンディアンを使っています
+code,num=rikky_module.convert("abcde","unicode","hex","little")
+とするとcode[1]="6100"と文字列で返ってくるようになります
+文字コードを文字列に変換する場合も同様で文字列で16進数を表記してください
+string=rikky_module.convert({"6100","6200","6300","6400","6500"},"unicode","hex","little")
+このようにするとstring="abcde"となります
+]]
+@例24
+--rikky_moduleをロードします
+require("rikky_module")
+text="古池や\n蛙飛び込む\n水の音"
+--文字列をunicodeに変換
+code,num=rikky_module.convert(text,"unicode","hex","little")
+--getinfoを使ってaviutl.exeがあるパスを取得します
+path=rikky_module.getinfo("path")
+--exoファイルを作ります
+local f=io.open(path.."rikky_module_text.exo","w")
+--基本設定部分を書き込みます
+f:write("[exedit]\nwidth=1280\nheight=720\nrate=30\nscale=1\nlength=6\naudio_rate=44100\naudio_ch=2\n[0]\nstart=1\nend=6\nlayer=1\noverlay=1\ncamera=0\n[0.0]\n_name=テキスト\nサイズ=34\n表示速度=0.0\n文字毎に個別オブジェクト=0\n移動座標上に表示する=0\n自動スクロール=0\nB=0\nI=0\ntype=0\nautoadjust=0\nsoft=1\nmonospace=0\nalign=0\nspacing_x=0\nspacing_y=0\nprecision=1\ncolor=ffffff\ncolor2=000000\nfont=MS UI Gothic\ntext=")
+--文字コードを書き込みます
+--改行のときだけ別処理をします
+--aviutlでは改行は0a00だけではなく、0d000a00と二文字分使います
+--実際は0a00だけでも改行されるが、仕様に合わせます
+for i=1,num do
+if code[i]=="0a00" and code[i-1]~="0d00" then
+f:write("0d000a00")
+num=num+1
+else
+f:write(code[i])
+end
+end
+--テキストオブジェクトは1024文字扱えて、足りない部分を0000で埋めます
+for i=1,1024-num do
+f:write("0000")
+end
+--オブジェクトの情報を書き込みます
+f:write("\n[0.1]\n_name=標準描画\nX=0.0\nY=0.0\nZ=0.0\n拡大率=100.00\n透明度=0.0\n回転=0.00\nblend=0\n")
+--開いたファイルを閉じます
+f:close()
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--マウスの位置取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはマウスの位置取得もサポートしてます
+require("rikky_module")でdllをロードします
+rikky_module.mouse関数が使えるようになります
+こちらはとても単純で引数なしで呼び出すとAviutlの画面に対してのマウスの座標x、yを返します
+引数を"playwindow"にすると再生ウインドウに対してのマウスの座標x、yを返します
+引数を"auto"にすると再生する画面を自動で判別してそちらにマウスの座標を合わせます
+また、引数をウインドウハンドル(HWNDの数値)にするとそのウインドウのクライアント領域に対してのマウスの座標になります
+なので、デスクトップのハンドルを渡すと全画面での位置を取得することも可能です
+再生ウインドウのハンドルを渡しても座標を取得できますが、補正がかからないので"playwindow"を素直に引数に渡してください
+正しく情報を正しく取得できなかった場合はnilが返ります
+基本動画作成には使う機会はありません
+キーボードの状態取得と併用することが多いかと思います
+]]
+@例25
+--rikky_moduleをロードします
+require("rikky_module")
+--rikky_module.keyでキーボードの押下状態を取得します今回はCTRLキーとエンターキーです
+local a=rikky_module.key("CTRL","LB","ENTER")
+--aだけだとわかりづらいので、名前を付けます
+local CTRL=a[1] or a[2]
+local ENTER=a[3]
+--時間を取得
+local now_time=os.clock()
+--infomation_of_targetがテーブルでないかエンターが押されている場合は初期化
+if rikky_module.type(infomation_of_target)~="table" or ENTER then
+game_w=obj.screen_w*0.5
+game_h=obj.screen_h*0.5
+target_color={0xff0000,0xff00,0xff,0xffff00,0xffff,0xff00ff}
+infomation_of_target={}
+--CTRLキーの長押し防止のための変数
+CTRL_time=true
+--説明部分の時間
+explain_time=now_time
+obj.setfont("",40)
+end
+if now_time-explain_time<8 then
+obj.load("マウスを的に合わせて、CTRLキーまたは左クリック")
+obj.draw()
+obj.load(math.ceil(8-now_time+explain_time).."秒後スタート")
+obj.draw(0,50)
+--スコア関係の変数
+infomation_of_next=now_time+obj.rand(1,3,now_time,0)
+LIFE=5
+SCORE=0
+HISCORE=0
+--イベント用の変数
+occur_time=now_time
+occur_rand1=5
+occur_rand2=10
+--ターゲットの情報(座標x、yと半径と色と的の種類とヒット状態)
+infomation_of_target[1]={
+	time=now_time,
+	x=obj.rand(-game_w,game_w,now_time,0),
+	y=obj.rand(-game_h,game_h,now_time,1),
+	r=0,
+	color=target_color[obj.rand(1,6,now_time,1)],
+	special=0,
+	hit=0
+}
+return
+end
+--CTRLが押されていなければ、CTRLを押してもいい状態を作る
+if not CTRL then
+CTRL_time=true
+end
+--CTRLが押されていて、かつ、CTRL_timeがtrueの場合はCTRL事態をflaseにする
+if CTRL then
+if CTRL_time then
+CTRL_time=false
+else
+CTRL=false
+end
+end
+--今回の主役の関数を呼び出し、メイン画面に対してのマウスの位置を取得
+--再生ウインドウ用にする場合は引数を"playwindow"にし、メイン画面にする場合は()括弧の中身をなしにします
+local x,y=rikky_module.mouse("auto")
+--次のフレームにコピーするためのダミーテーブル
+local tmp={}
+--infomation_of_targetにはtimeが小さい順に入っているので、後ろからループを開始してより大きい的にヒット判定を優先させる
+for i=#infomation_of_target,1,-1 do
+	--データをtmpにコピーしていいかのフラグ
+	local push_flag=0
+	--ターゲットが打たれたかをhitで調べる
+	if infomation_of_target[i].hit==0 then
+		--的は8秒以内に打つ
+		local r=(now_time-infomation_of_target[i].time)*50
+		if r<=400 then
+			--マウスとターゲットの距離を出して、それがターゲット内かどうかを調べる
+			local X=x-infomation_of_target[i].x
+			local Y=y-infomation_of_target[i].y
+			if CTRL and (X*X+Y*Y)^.5<=r*.5 then
+				--CTRLを押してhitしたらスコアに100加える
+				SCORE=SCORE+100
+				if HISCORE<SCORE then
+					HISCORE=SCORE
+				end
+				--hitしたことを変数に知らせて、ターゲットの時間を現時刻に合わせる
+				infomation_of_target[i].hit=1
+				infomation_of_target[i].time=now_time
+				--連続ヒットをなくすために、一回のループでヒットは1回まで
+				CTRL=false
+				--specialの場合はLIFEを1上昇
+				if infomation_of_target[i].special==1 then
+					LIFE=LIFE+1
+				end
+			else
+				--ヒットしなければ半径を代入
+				infomation_of_target[i].r=r
+			end
+		else
+			--ターゲットの半径が400を超えた場合は、LIFEを1減らす
+			LIFE=LIFE-1
+			--もしLIFEが0になったら、初期化する
+			if LIFE==0 then
+				infomation_of_target={}
+				infomation_of_target[1]={
+					time=now_time,
+					x=obj.rand(-game_w,game_w,now_time,0),
+					y=obj.rand(-game_h,game_h,now_time,1),
+					r=0,
+					color=target_color[obj.rand(1,3,now_time,1)],
+					special=0,
+					hit=0
+				}
+				tmp={}
+				infomation_of_next=now_time+obj.rand(1,300,now_time,0)*.01
+				LIFE=5
+				if HISCORE<SCORE then
+					HISCORE=SCORE
+				end
+				SCORE=0
+				occur_time=now_time
+				occur_rand1=5
+				occur_rand2=10
+				break
+			end
+			--ターゲットは消滅するのでダミーにコピーする必要はなく、フラグを変更
+			push_flag=1
+		end
+	else
+		--hitの状態のときは文字を表示
+		if 2<=now_time-infomation_of_target[i].time then
+			push_flag=1
+		end
+	end
+	--フラグがあるときだけコピーする
+	if push_flag==0 then
+		tmp[#tmp+1]={
+			time=infomation_of_target[i].time,
+			x=infomation_of_target[i].x,
+			y=infomation_of_target[i].y,
+			r=infomation_of_target[i].r,
+			color=infomation_of_target[i].color,
+			special=infomation_of_target[i].special,
+			hit=infomation_of_target[i].hit
+		}
+	end
+end
+--一度infomation_of_targetを空にして、tmpをコピーする
+--テーブル同士の代入はエラーの元です
+infomation_of_target={}
+local n=#tmp+1
+for i=1,#tmp do
+	local j=n-i
+	infomation_of_target[i]={
+		time=tmp[j].time,
+		x=tmp[j].x,
+		y=tmp[j].y,
+		r=tmp[j].r,
+		color=tmp[j].color,
+		special=tmp[j].special,
+		hit=tmp[j].hit
+	}
+end
+--描画は小さい順から初めて、大きいものがより手前に来るようにする
+for i=1,#infomation_of_target do
+	if infomation_of_target[i].hit==0 then
+		if infomation_of_target[i].special==0 then
+			obj.load("figure","円",infomation_of_target[i].color,infomation_of_target[i].r)
+		else
+			obj.load("figure","円",0xffffff,infomation_of_target[i].r)
+		end
+	else
+		if infomation_of_target[i].special==0 then
+			obj.load("hit:100")
+		else
+			obj.load("life up")
+		end
+	end
+	obj.draw(infomation_of_target[i].x,infomation_of_target[i].y)
+end
+
+
+local newflag=0
+--新たなターゲットを作ります
+if infomation_of_next-now_time<0 then
+	infomation_of_next=now_time+obj.rand(1,4,now_time,0)
+	local n=#infomation_of_target+1
+	infomation_of_target[n]={
+		time=now_time,
+		x=obj.rand(-game_w,game_w,n*3,now_time),
+		y=obj.rand(-game_h,game_h,n*4,now_time+1),
+		r=0,
+		color=target_color[obj.rand(1,6,n*5,now_time+2)],
+		hit=0
+	}
+	if obj.rand(0,100,n,99)<5 then
+		infomation_of_target[n].special=1
+	else
+		infomation_of_target[n].special=0
+	end
+	newflag=1
+end
+--たくさんターゲットを出すイベントを発生させます
+if 10<now_time-occur_time then
+	local n=#infomation_of_target
+	local maxtime=0;
+	for i=1+n,obj.rand(occur_rand1,occur_rand2,occur_time,now_time)+n do
+		infomation_of_target[i]={
+			time=now_time+obj.rand(0,500,now_time,i)*.01,
+			x=obj.rand(-game_w,game_w,i*3,now_time+occur_time),
+			y=obj.rand(-game_h,game_h,i*5,now_time+occur_time),
+			r=0,
+			color=target_color[obj.rand(1,6,i*7,now_time+occur_time)],
+			hit=0
+		}
+		if maxtime<infomation_of_target[i].time then
+			maxtime=infomation_of_target[i].time
+		end
+		if obj.rand(0,100,i,99)<5 then
+			infomation_of_target[i].special=1
+		else
+			infomation_of_target[i].special=0
+		end
+	end
+	newflag=1
+	occur_time=maxtime+9
+	infomation_of_next=maxtime+obj.rand(1,4,now_time,0)
+	occur_rand1=occur_rand1+3
+	occur_rand2=occur_rand2+4
+end
+--新しいターゲットが生まれたら配列の並びを小さい順にする
+if newflag==1 then
+	tmp={}
+	local dammy={}
+	local t=infomation_of_target[1].time
+	tmp[1]={
+		time=t,
+		index=1
+	}
+	dammy[1]={
+		time=infomation_of_target[1].time,
+		x=infomation_of_target[1].x,
+		y=infomation_of_target[1].y,
+		r=infomation_of_target[1].r,
+		color=infomation_of_target[1].color,
+		special=infomation_of_target[1].special,
+		hit=infomation_of_target[1].hit
+	}
+	for i=2,#infomation_of_target do
+		local t0=infomation_of_target[i].time
+		if t0<=t then
+			t=t0
+			tmp[i]={
+				time=t0,
+				index=i
+			}
+		else
+			local nflag=0
+			for j=i-1,1,-1 do
+				if t0<=tmp[j].time then
+					for k=i-1,j+1,-1 do
+						tmp[k+1]={
+							time=tmp[k].time,
+							index=tmp[k].index
+						}
+					end
+					tmp[j+1]={
+						time=t0,
+						index=i
+					}
+					nflag=1
+					break
+				end
+			end
+			if nflag==0 then
+				for j=i,2,-1 do
+					tmp[j]={
+						time=tmp[j-1].time,
+						index=tmp[j-1].index
+					}
+				end
+				tmp[1]={
+					time=t0,
+					index=i
+				}
+			end
+		end
+		dammy[i]={
+			time=infomation_of_target[i].time,
+			x=infomation_of_target[i].x,
+			y=infomation_of_target[i].y,
+			r=infomation_of_target[i].r,
+			color=infomation_of_target[i].color,
+			special=infomation_of_target[i].special,
+			hit=infomation_of_target[i].hit
+		}
+	end
+	infomation_of_target={}
+	for i=1,#tmp do
+		local j=tmp[i].index
+		infomation_of_target[i]={
+			time=dammy[j].time,
+			x=dammy[j].x,
+			y=dammy[j].y,
+			r=dammy[i].r,
+			color=dammy[j].color,
+			special=dammy[j].special,
+			hit=dammy[j].hit
+		}
+	end
+end
+
+--情報を表示
+obj.load("SCORE/"..SCORE)
+obj.draw(game_w-obj.w*0.5,-game_h+obj.h*0.5)
+obj.load("HI-SCORE/"..HISCORE)
+obj.draw(0,-game_h+obj.h*0.5)
+obj.load("LIFE/"..LIFE)
+obj.draw(-game_w+obj.w*0.5,-game_h+obj.h*0.5)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--回転変換関数について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは回転変換もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.rotation関数が使えるようになります
+rikky_module.rotation(
+	回転前のX座標、
+	回転前のY座標、
+	回転前のZ座標、
+	回転させる角度(ラジアン)、
+	回転させる軸、
+	軸の中心(テーブル)
+)
+の引数を取りますが、最低でも回転前のX座標、回転前のY座標、回転前のZ座標、回転させる角度(ラジアン)の四つは記述してください
+回転させる軸を省略するとZ軸回転になります
+軸の中心を省略すると{0,0,0}の原点になります
+軸の指定は文字列で"X"、"Y"、"Z"のいずれかを指定してください
+回転軸は任意の軸を設定することも可能です
+{1,1,0}方向の軸のようにテーブルを指定すればその軸を回転軸にできます
+角度をラジアンにする方法は回転させたい角度にmath.pi/180をかけるだけで変換できます
+60度の場合は60*maht.pi/180のようになります
+また回転前の座標の3つだけを引数で渡すと、1つ前で渡した回転角度、軸、中心で回転します
+]]
+
+@例26
+--rikky_moduleをロードします
+require("rikky_module")
+x=100
+y=200
+z=0
+--Z軸回転させます
+x,y,z=rikky_module.rotation(x,y,z,360*math.pi/180*obj.time/obj.totaltime,"Z")
+obj.draw(x,y,z)
+
+@例27
+--track0:水平角,0,360,0
+--track1:垂直角,-90,90,0
+--rikky_moduleをロードします
+require("rikky_module")
+x=100
+y=-100
+z=100
+--任意の軸で回転させます
+nx=math.cos(obj.track0*math.pi/180)*math.cos(obj.track1*math.pi/180)
+ny=math.sin(obj.track0*math.pi/180)*math.cos(obj.track1*math.pi/180)
+nz=math.sin(obj.track1*math.pi/180)
+--原点を中心に回転させます(省略時と同じですが例として)
+x,y,z=rikky_module.rotation(x,y,z,360*math.pi/180*obj.time/obj.totaltime,{nx,ny,nz},{0,0,0})
+obj.draw(x,y,z)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--変数保存について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは変数保存もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.dataload関数とrikky_module.datasave関数が使えるようになります
+rikky_module.dataloadでデータを呼び出して、rikky_module.datasaveでデータを保存します
+常に二つ同時に使います
+引数にロードしたい変数の名前を文字列で指定します
+rikky_module.dataload("hoge")
+hoge変数をいじる
+rikky_module.datasave("hoge")
+のようにします
+hogeはグローバル変数でなければいけないことに注意してください
+ローカル変数では反応しません
+スクリプトの限界で、必ずデータが保存されるとは限らないことに注意してください
+同じ変数名でも使うオブジェクトが異なれば変数は正しく保存されます
+データは外部のrdataファイルとして保存されます
+プロジェクトファイル名が未設定の場合はsaviutl_script_data.rdataとなり、設定されていればその名前のrdataファイルになります
+プロジェクトファイル名を設定して閉じた場合はsaviutl_script_data.rdataだけになり、次にそのプロジェクトファイルを立ち上げて、このスクリプトが実行されたときに
+プロジェクトファイル名のrdataが初めて作られます
+なので、別のプロジェクトを立ち上げると今までのデータがただしく保存されないので注意してください
+既存のプロジェクトを別の名前で保存した場合は、rdataファイルが新しく作られますが、一度でもdllが実行されないとファイルは作られないので注意してください
+つまりは、プロジェクトの保存のタイミングで保存をしておらず、dllが実行されたときに保存するタイミングが違うということを念頭に置いておいてください
+保存されるデータは数値、文字列、ブーリアン、テーブルの四種類のみです
+rdataファイルのバイナリ構造としては
+変数名(\0までの可変長)、レイヤからのデータ長(4バイト)、レイヤ(1バイト)、オブジェクトの始まるフレーム(4バイト)、オブジェクトの終わるレイヤ(4バイト)、オブジェクトID(2バイト)、変数データ(可変長)
+となっています
+変数データはまず変数の型が1バイトで次が型によって長さが変わります
+数値の場合(1)はdoubleの8バイト、文字列の場合(2)は\0までの可変長バイト、ブ―リアンの場合(3)は1バイト、nilの場合(5)は1バイト、テーブルの場合(4)は0までの可変長バイトです
+テーブルはまずキーの型が数値か文字列かの判別に1バイト使い、数値の場合は8バイト、文字列の場合は\0までの可変長バイトです
+次に値の型が1バイト来て、値のデータが連なります。値は既に説明したようなバイトになります
+値がテーブルの場合は以降同じようなデータが続きます
+同じ変数名でもIDやレイヤ、フレームの位置によって個性をつけます
+なので別のオブジェクトでも同じ変数名を使いまわすことができますが、同じオブジェクト内ではIDもレイヤも同じになってしまうので、loadデータやsaveデータも同じになってしまいます
+]]
+
+@例28
+--rikky_moduleをロードします
+require("rikky_module")
+--変数名は複数設定できます
+--この段階でPOSXとPOSYがロードされます
+--対応するrdataファイルがない場合は、POSXやPOSYはnilになります
+--ロードはレイヤの位置やオブジェクト位置で判別しています
+rikky_module.dataload("POSX","POSY")
+--POSX、POSYがテーブルでない場合はテーブルにする
+if POSX~=nil then POSX={} end
+if POSY~=nil then POSY={} end
+--フレーム数が10で割って1余る位置のときだけ、ランダムな位置を追加する
+if obj.frame%10==1 then
+POSX[#POSX+1]={obj.rand(-250,2500,#POSX,0),obj.rand(-250,2500,#POSX,1)}
+POSY[#POSY+1]={obj.rand(-250,2500,#POSY,2),obj.rand(-250,2500,#POSY,2)}
+--描画
+for i=1,#POSX do
+obj.draw(POSX[i],POSY[i])
+end
+--変数を保存します
+--この段階でrdataファイルに保存されます
+--以降保存されたデータがdataloadでロードされます
+--セーブはオブジェクトのIDをもとに保存しています
+--セーブが実行されるのはデータが違う場合とレイヤや位置が変更されたときです
+rikky_module.datasave("POSX","POSY")
+--セーブとロードの判別方法が違うのは、プロジェクトファイルを立ち上げるとオブジェクトIDがリセットされてしまうので、IDでロードするデータを判別することができないからです
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--ダイアログ数値設定について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはダイアログ設定もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.setdialogparam関数が使えるようになります
+ダイアログ数値設定とはそもそも何かといえば、obj.setanchorでダイアログの数値が画面のアンカーを動かすと変化するように
+自動的にダイアログ設定の数値を変更することができるものです
+外部ファイルのデータを読み込んだ時にその数値などをダイアログに反映させるときなどに使えます
+--dialog:項目1,value1=12;
+このようになっている場合
+rikky_module.setdialogparam("value1",15)
+とするとダイアログの数値が12から15に変化します
+第一引数は文字列で変化させたい変数名を記入します
+第二引数に変化させたい数値を入れます
+注意点は変数名の変数はグローバル変数でなければいけません
+また数値ではなく、文字列やテーブルやブーリアンにすることも可能です
+]]
+@例29
+--dialog:ここは絶対に9,fixed=9;
+--rikky_moduleをロードします
+require("rikky_module")
+--fixedという変数を9にしたいので引数は"fixed"と9にする
+rikky_module.setdialogparam("fixed",9)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--画像データ一時保存について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは画像データの一時キャッシュもサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.image関数が使えるようになります
+ゆうきさんのextbufferと役割はほとんど同じです
+第一引数によって、書き、読み、消し、ID検索が決定します
+画像イメージを書き込む場合は"w"にします
+画像イメージを読み込む場合は"r"にします
+画像イメージを書き込んだイメージのデータをメモリから消す場合は"c"にします
+画像イメージを空いているID検索の場合は"g"にします
+画像イメージとイメージを合成する場合は"m"にします
+画像イメージのデータ情報を取得する場合は"i"にします
+第二引数にイメージを置いておくID番号の数値を指定します
+extbufferは文字列にも対応していますが、これは数値のみです(ごめんなさい)
+ID番号は0以上の整数を指定します
+マイナスの場合は予期せぬ事態になるので、指定しないようにしましょう
+ID番号1に書き込む場合はrikky_module.image("w",1)のようにします
+空いているIDを取得する場合は
+ID=rikky_module.image("g")
+と第二引数なしで、"g"を指定します
+戻り値は空いている番号になります
+使った後は必ずイメージを消しましょう
+メモリにイメージが残り続けます
+メモリ上のイメージはレイヤやルート関係なく、共有されています
+"m"の合成方法はrikky_module.image("m",後面のID,前面のID,前面のX,前面のY)
+と指定します
+後面の左上(0,0)をして前面の位置をXとYで指定します
+pixeldata,w,h=rikky_module.image("i",ID)のように"i"は使います
+また"w+"、"r+"、"c+"、"g+"、"m+"、"i+"とプラスをつけると少し変化します
+"w+"の場合は透明度(トラックバーとobj.alphaの積)が反映されて保存されます
+"r+"の場合は呼び出したオブジェクトのobj.oxなどの位置情報で上書きします
+"c+"の場合は全イメージを消去します
+"g+"の場合は使われているIDをテーブルで返します
+"m+"の場合は透明度を考慮して合成します
+"i+"の場合はuserdataがテーブルになり、luaからでも各ピクセル要素を見ることができます
+pixeldata.A[i]、pixeldata.R[i]、pixeldata.G[i]、pixeldata.B[i]と透明度とRGBになります
+値の範囲はそれぞれ0から255までです
+テーブルの要素の位置のiはi=y*w+x+1で出ます(xは0<=x<w、yは0<=y<hの範囲です)
+]]
+
+@例30
+--rikky_moduleをロードします
+require("rikky_module")
+--空いているIDを取得(たいていは0から始まります)
+ID=rikky_module.image("g")
+--ID番目に現在のイメージを書き込みます
+rikky_module.image("w",ID)
+--現在のオブジェクトのイメージを背景に変えます
+obj.load("figure","背景")
+--ID番目に書き込んだイメージを呼び出して、背景から元のオブジェクトのイメージかえます
+rikky_module.image("r",ID)
+--ID番目のイメージデータをメモリから解放します
+rikky_module.image("c",ID)
+--仮想バッファは使っていないので、仮想バッファ内でも使えます
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--カメラデータ取得について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはカメラデータもサポートしています
+require("rikky_module")でdllをロードします
+通常のobj.getoption("camera_param")で取得できるテーブルは
+camera_param={
+	x,--カメラのx座標
+	y,--カメラのy座標
+	z,--カメラのz座標
+	tx,--カメラの焦点のx座標
+	ty,--カメラの焦点のy座標
+	tz,--カメラの焦点のz座標
+	ux,--カメラの上の向きのベクトルのx成分
+	uy,--カメラの上の向きのベクトルのy成分
+	uz,--カメラの上の向きのベクトルのz成分
+	rz ,--カメラの回転角度
+	d,--視野角の距離
+}
+となっています
+これは呼び出したオブジェクトがカメラ制御下にあろうがなかろうが現在のカメラデータを返します
+rikky_module.camerainfo()を使うと以下のテーブルを取得できます
+camera_param={
+	x,--カメラのx座標
+	y,--カメラのy座標
+	z,--カメラのz座標
+	tx,--カメラの焦点のx座標
+	ty,--カメラの焦点のy座標
+	tz,--カメラの焦点のz座標
+	ux,--カメラの上の向きのベクトルのx成分
+	uy,--カメラの上の向きのベクトルのy成分
+	uz,--カメラの上の向きのベクトルのz成分
+	ex,--カメラの焦点の向きのベクトルのx成分
+	ey,--カメラの焦点の向きのベクトルのy成分
+	ez,--カメラの焦点の向きのベクトルのz成分
+	nx,--カメラの横の向きのベクトルのx成分
+	ny,--カメラの横の向きのベクトルのy成分
+	nz,--カメラの横の向きのベクトルのz成分
+	rz ,--カメラの回転角度
+	d,--視野角の距離
+	blur,--カメラの深度ぼけの現在の数値
+	normal_d,--オブジェクトとカメラが作る面との距離
+	real_d,--オブジェクトとカメラとの距離
+	vx,--カメラからオブジェクトへと向かうベクトルのx成分
+	vy,--カメラからオブジェクトへと向かうベクトルのy成分
+	vz,--カメラからオブジェクトへと向かうベクトルのz成分
+	mx,--オブジェクトの正面が向いているベクトルのx成分
+	my,--オブジェクトの正面が向いているベクトルのy成分
+	mz,--オブジェクトの正面が向いているベクトルのz成分
+	ix,--オブジェクトのAviutlの画面上での見かけ上のx座標
+	iy,--オブジェクトのAviutlの画面上での見かけ上のy座標
+	zoom,--オブジェクトのAviutlの画面上での見かけ上の倍率
+	shadow_x,--シャドーの光源のx座標
+	shadow_y,--シャドーの光源のy座標
+	shadow_z,--シャドーの光源のz座標
+	shadow_accu,--シャドーの光源の精度
+	shadow_conce,--シャドーの光源の濃度
+	shadow_flag,--シャドーが有効かのフラグ
+	billboard,--カメラの方向を向くかの数値(getinfo("billboard")で取得できる数値と同じ)
+}
+これらのデータは呼び出したオブジェクトによって変化します
+例えばカメラ制御下のオブジェクトならばカメラデータはobj.getoption("camera_param")と同じ部分もあります
+しかしカメラ制御下でない場合はobj.getoption("camera_param")と一致せず、txやxなどは描画に必要なデータになります
+また呼び出した時点でのオブジェクトとカメラとの位置関係なので、呼び出したあとで振動などのフィルターオブジェクトが動いた場合などは正しい数値を返せなくなります
+obj.drawとobj.darawpolyで描画する場合の位置を反映させたい場合は
+camera_param=rikky_module.camerainfo({x,y,z,zoom,alpha,rx,ry,rz})
+または
+camera_param=rikky_module.camerainfo({x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3})
+のようにobj.drawやobj.drawpolyの引数をテーブルで渡すと正しい数値が返ってきます
+]]
+@例31
+--rikky_moduleをロードします
+require("rikky_module")
+--カメラとオブジェクトの関係のデータを取得
+cam=rikky_module.camerainfo()
+--オブジェクトの正面のベクトルとカメラの向く面とのベクトルの内積を取る
+v=cam.nx*cam.mx+cam.ny*cam.my+cam.nz*cam.mz
+--内積がマイナスのときはカメラの面とオブジェクトの面が向き合っていて、プラスのときは同じ方向を向いていることになります
+v=(1-v)*50
+--面の向きで色の強弱をつける
+obj.effect("単色化","color",0xff0000,"強さ",v,"輝度を保持する",0)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--変数名指定代入について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは変数代入もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.assign関数は代入とコピーの2通りの使い方があります
+変数名を決めて代入する方法は以下のようになります
+state=rikky_module.assign("make",設定したい変数名の文字列,代入したい数値や文字列など)
+第一引数は"make"を指定します
+第二引数はつけたい変数名の文字列を指定します
+変数名は先頭の文字が_か数字以外の英字である必要があります
+また、予約語である場合も設定できません
+予約語は以下の31種類です
+and
+break
+do
+else
+elseif
+end
+false
+for
+function
+if
+in
+local
+nil
+not
+or
+repeat
+return
+then
+true
+until
+while
+
+ただし、luaは大文字と小文字は別として扱われるのでORなどは予約語ではなく、変数名として使うことができます
+第三引数は代入したいデータであり、データは数値や文字列やブーリアン、テーブルなど対応しています
+戻り値のstateは成功の場合はtureを返し、失敗の場合はfalseを返します
+呼び出したい変数名の数値を取得する場合は以下のようにします
+value=rikky_module.assign("copy",設定したい変数名の文字列)
+第一引数は"copy"を指定します
+第二式数は呼び出したい変数名の文字列を指定します
+戻り値はその変数名の値です
+]]
+@例32
+--dialog:変数名,name="hensuuとだけ記入"
+--rikky_moduleをロードします
+require("rikky_module")
+obj.setfont("",50)
+--nameが保持している文字列の変数名の変数に123456789を代入する
+rikky_module.assign("make",name,123456789)
+--今回はhensuuに代入するのが目的であり、rikky_module.assign("make")でhennsuuに123456789が代入されたかを確かめる
+obj.load("text",hensuu)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--カラーコード変換について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはカラーコード変換もサポートしています
+require("rikky_module")でdllをロードします
+対応しているカラーコードは
+RGB
+ycbcr
+HSV
+HSL
+xyz
+L*a*b*
+CMY
+CMYK
+の8種類です
+AviutlにはRGB関数とHSV関数もあり、使い方も似せました
+rikky_module.colorconvert関数の第一引数にどのカラーコード変換を行いたいかの文字列を指定します
+RGBならば"rgb"
+ycbcrならば"yc"
+HSVならば"hsv"
+HSLならば"hsl"
+xyzならば"xyz"
+L*a*b*ならば"lab"
+CMYならば"cmy"
+CMYKならば"cmyk"
+です
+もしくは数値で1から8でも指定可能です
+カラーコードを指定したら、第二引数以降の数でどのように変換するかを自動的に決めます
+第二引数だけの場合はそれそれの各成分を返します
+第二引数以降を各成分だけ渡すと0xRRGGBBの16進数を返します
+例としてRGBの場合
+r,g,b=rikky_module.colorconvert("rgb",0xffee99)
+とすると
+r=0xff
+g=0xee
+b=0x99
+といった数値になります
+その逆に色をまとめる場合は
+color=rikky_module.colorconvert("rgb",0xff,0xee,0x99)
+とすると
+color=0xffee99の数値になります
+RGBからCMYまでは各成分は3つですが、CMYKは4成分必要なので気を付けてください
+それぞれのカラーコードの範囲は以下のようになっています
+RGB
+r[0,255]
+g[0,255]
+b[0,255]
+
+ycbcr
+y[0,4096]
+cb[-2048,2048]
+cr[-2048,2048]
+
+HSV
+h[0,360]
+s[0,100]
+v[0,100]
+
+HSL
+h[0,360]
+s[0,100]
+L[0,100]
+
+xyz
+x[0,95]
+y[0,100]
+z[0,109]
+
+L*a*b*
+h[0,100]
+s[-86,98]
+v[-108,94]
+
+CMY
+c[0,100]
+m[0,100]
+y[0,100]
+
+CMYK
+c[0,100]
+m[0,100]
+y[0,100]
+k[0,100]
+です
+また、補色、反対色の変換も備えています
+第一引数を"complementary"または9にすると指定したカラーの補色が返ってきます
+第一引数を"opposite"または10にすると指定したカラーの反対色が返ってきます
+color=rikky_module.colorconvert("complementary",color)
+のように補色、反単色は一対一対応となっています
+]]
+@例33
+--track0:1,8,1,1
+--color:0xffffff
+--rikky_moduleをロードします
+require("rikky_module")
+colorcode={"rgb","yc","hsv","hsl","xyz","lab","cmy","cmyk"}
+a,b,c,d=rikky_module.colorconvert(colorcode[obj.track0],color)
+str="選んだカラーコードは"..colorcode[obj.track0].."です\n各成分は\n"..a.."\n"..b.."\n"..c
+if obj.track0==8 then
+str=str.."\n"..d
+end
+str=str.."\nです"
+obj.setfont("",40)
+obj.load("text",str)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--輪郭抽出関数について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは輪郭抽出もサポートしています
+require("rikky_module")でdllをロードします
+rikky_module.bordering関数を呼び出すと輪郭の位置情報などを返します
+b,n,m=rikky_module.bordering()と引数なしで呼び出して使います
+bは輪郭情報が入ったテーブルです
+bはさらに複数のテーブルが入っていて、そのテーブルに輪郭情報が入っています
+nは輪郭情報の数が入ったテーブルです
+nはさらに複数のテーブルが入っていて、bのテーブルの数が入っています
+mはb、ｎのテーブルの数で、要は輪郭の数です
+輪郭が1の場合はmが1になりn[1]にb[1]の位置情報の数が入っています
+b[1]には位置情報がx座標、y座標、x座標...とn[1]の数だけ入っています
+なので、b[1]の数は必ずn[1]の数の2倍になります
+またb[1][1]のx座標情報とb[1][2]のy座標情報はb[1][n[1]-1]のx座標とb[1][n[1]]のy座標と同じ値になります
+輪郭なので一周するようにしています
+また輪郭は左回り(反時計回り)でなぞるようになっていますので、右回り(時計回り)にする場合は各自工夫してください
+]]
+@例34
+--dialog:変数名,name="hensuuとだけ記入"
+--rikky_moduleをロードします
+require("rikky_module")
+--bordering関数を使って輪郭情報を取得します
+b,n,m=rikky_module.bordering()
+obj.load("figure","円",0xff0000,10)
+--輪郭の数だけループさせます
+for i=1,m do
+	--各輪郭の位置情報分だけ円を描画します
+	for j=1,n[i]-1 do
+		--x座標は奇数、y座標は偶数に入っています
+		x=j*2-1
+		y=x+1
+		obj.draw(b[i][x],b[i][y])
+	end
+end
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--直交軸変更・変換について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは任意の軸回転の変換もサポートしています
+require("rikky_module")でdllをロードします
+AviUtlでは回転させる場合Z軸→Y軸→X軸の順で回転します
+これは仕様ですなので望んだ回転演出ができない場合もあります
+文章では説明しにくい部分ではありますので、例を見ていただければわかるかと思います
+例を見てもらった前提で説明していきます
+例ではY軸とX軸をZ軸で回転させることができます
+それでY軸回転をさせると回転したY軸で回転するかと思います
+通常だとZ軸で回転させても、Y軸回転ではY軸も一緒に回転することなく常に(0,1,0)の軸で回転します
+なんとなくお分かりいただけたでしょうか？
+axisconvert関数は指定した直交座標でX軸、Y軸、Z軸回転をさせることができます
+グループ制御で回転させたあと、もとオブジェクトの回転をさせたようなものです
+rx,ry,rz=rikky_module.axisconvert(axis [,flag])
+と設定します
+axisは各X軸Y軸Z軸と回転させる角度を設定させます
+axis={
+	Xx=X軸のx成分,
+	Xy=X軸のy成分,
+	Xz=X軸のz成分,
+	rx=X軸で回転させる角度,
+	Yx=Y軸のx成分,
+	Yy=Y軸のy成分,
+	Yz=Y軸のz成分,
+	ry=Y軸で回転させる角度,
+	Zx=Z軸のx成分,
+	Zy=Z軸のy成分,
+	Zz=Z軸のz成分,
+	rz=Z軸で回転させる角度,
+}
+この12個の要素を指定します
+flagは0のときは角度は90度や180度といった度数法でflagが1のときはmath.piなどを使った弧度法の数値を指定するようにします
+省略した場合は0です
+また戻り値もflagによって度数法か弧度法かかわります
+戻り値はAviUltの回転用に変換された角度です
+obj.rxやobj.drawの角度成分に入れると指定された軸回転をします
+axisconvertEx関数も用意してあります
+axisconvertとaxisconvertExの違いはaxisconvertExは回転軸を自由に設定できます
+rx,ry,rz=rikky_module.axisconvertEx(axis [,flag, axisrotation])
+と設定します
+axisは回転させたい直線のベクトルとその回転角度を順々に入れていきます
+axis={回転させたい軸のx成分、回転させたい軸のy成分、回転させたい軸のz成分、回転させたい角度、...}
+このように4つ一塊で設定していきます
+なので、何度も軸回転させることが可能です
+flagはaxisconvert関数と同じです
+axisrotationは0か1で指定します、省略した場合は0です
+axisrotationを1にすると複数の回転をさせる場合、設定した回転軸も回転するようになります
+例として{0,0,1,90,0,1,0,180}とaxisをした場合初めの回転で90度回転します
+そして(0,1,0)の軸も90度回転して(-1,0,0)になってこの軸で180度回転するようになります
+またaxisで初めのX軸とY軸を設定することもできます
+axis={
+	Xx=X軸のx成分,
+	Xy=X軸のy成分,
+	Xz=X軸のz成分,
+	Yx=Y軸のx成分,
+	Yy=Y軸のy成分,
+	Yz=Y軸のz成分,
+}
+を設定してから、回転軸と角度を順々に設定します
+]]
+@例35
+--track0:Z軸回転,-360,360,0
+--track1:変換Y軸回転,-360,360,0
+--rikky_moduleをロードします
+require("rikky_module")
+--各回転軸を設定します
+axis={}
+axis.Xx=1
+axis.Xy=0
+axis.Xz=0
+axis.rx=0
+axis.Yx=0
+axis.Yy=1
+axis.Yz=0
+axis.ry=obj.track1
+axis.Zx=0
+axis.Zy=0
+axis.Zz=1
+axis.rz=0
+rz=obj.track0*math.pi/180
+--X軸とY軸を回転させます
+axis.Xx,axis.Xy=axis.Xx*math.cos(rz)-axis.Xy*math.sin(rz),axis.Xx*math.sin(rz)+axis.Xy*math.cos(rz)
+axis.Yx,axis.Yy=axis.Yx*math.cos(rz)-axis.Yy*math.sin(rz),axis.Yx*math.sin(rz)+axis.Yy*math.cos(rz)
+--obj.rxなどに直接代入して、回転させます
+obj.rx,obj.ry,obj.rz=rikky_module.axisconvert(axis)
+
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--文字列呼び出し関数について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllは文字列呼び出しもサポートしています
+require("rikky_module")でdllをロードします
+通常のobj.load("text")で呼び出す文字は左寄せ限定だったので
+中央寄せ、右寄せを可能にしました
+rikky_module.textload(text [,align,center,tategaki])
+のように使います
+alignが寄せる位置で、0が左、1が中央、2が右です
+centerは中心の位置を変更できます
+0が左上、1が真ん中上、2が右上
+3が左中央、4が真ん中中央、5が右中央
+6が左下、7が真ん中下、8が右下
+です
+縦書は単純にテキストを縦にします
+obj.setfontにてフォントを縦書用にする必要があります
+また制御文字色を変える<#>とフォントサイズを変える<s>以外は使えません
+上記の制御文字を使うと@に変換されますのでお気を付けください
+またテキストオブジェクト内の個別オブジェクトで文字列を呼び出すとエラーを起こしますが
+これを使って呼び出すとエラーを出さずに呼び出すことができます
+]]
+@例36
+--rikky_moduleをロードします
+require("rikky_module")
+obj.setfont("",50)
+rikky_module.textload("aiueo\nkakiku<#00ffff>keko\nsashisuseso",2,8)
+
+
+--[[
+歴史
+20XX extension.dllとany_key.dllとrikky_get.dllをrikky_module.dllに統合、この段階で実質ver0.3
+
+2016 3 03 ひな祭りにエラー報告をいただき、正しくライブラリリンクした
+
+2016 3 11 list関数とgetinfo関数とtype関数とglassdraw関数とconvert関数とmouse関数とaudiobuffer関数を追加、ver0.4
+
+2016 3 17 list関数とfont関数の共存エラーを修正、dllのバージョン0.4aに変更
+
+2016 時期不明 dllのバージョン0.4bに変更
+
+2016 5 17 getinfo関数の種類追加、"filter"をカスタムオブジェクトで使う際のエラー訂正、rotation関数、dataload関数、image関数、setdialogparam関数の追加、dllのバージョン0.5に変更
+
+2016 5 26 setdialogparam関数の文字列操作の一部訂正、audiobufferの一部訂正、image関数に新要素の追加、dllのバージョン0.5aに変更 また　where_is_rikky_module.dll.exeを開発
+
+2016 6 03 image関数に新要素追加、getinfo関数に新しくculling、force、antialias、billboardのフラグ取得の追加、convert関数でUTF-8が扱えるように改良、dllのバージョン0.5bに変更
+
+2016 6 15 setdialogparam関数でのカスタムオブジェクト挙動を一部修正と16進数表示追加、convert関数のunicodeの改行における処理を変更、getinfo関数のfocusとfilterの中点におけるエラーを修正、参照アドレスのオフセット値の見直し、where_is_rikky_module.dll.exeのまとめた先が表示されない不具合を修正、dllのバージョン0.5cに変更
+
+2016 7 09 getinfo関数のtextの不具合を訂正、mouseのアドレス参照のエラーを訂正、dllのバージョン0.5dに変更
+
+2016 8 12 camerainfo関数とassign関数とcolorconvert関数とbordering関数とaxisconvert関数とaxisconvertEx関数とtextload関数を追加、
+          getinfo関数に新しくgroupの情報取得を追加、frameでのシーン機能の現フレームと全体のフレーム数を訂正、audiobuffer関数の再生ウインドでの再生を修正、rotation関数の一部使い方変更、image関数の"i+"の仕様を変更
+          dllのバージョン1.0に変更、不具合がない限りこれでおしまい
+]]--

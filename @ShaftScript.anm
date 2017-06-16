@@ -1,0 +1,107 @@
+--[[このスクリプトはあくまで個人用です。そのため多少の機能不足はご了承願いますようお願いいたします]]--
+------------------------------------
+@3Dグラデーション
+------------------------------------
+--track0:強度,0,100,100
+--track1:ピント,-5000,5000,0
+--track2:幅,0,2000,800,1
+--track3:角度,-720,720,0
+--dialog:上色/col,color_1=0x000000;下色/col,color_2=0xf31407;中心X,centerX=0;中心Y,centerY=0;Z軸強度差,Zdiff=100;
+
+local stren = obj.track0/100
+local Zfocas = obj.track1
+local wid = obj.track2
+local angle = obj.track3
+local cam = obj.getoption("camera_param")
+local x, y, z=obj.ox, obj.oy, obj.oz
+local cx, cy, cz=cam.x, cam.y, cam.z
+local pi=math.pi
+
+local tmp={}
+
+tmp[1], tmp[2], tmp[3]=math.abs(x+cx)/2, math.abs(y+cy)/2, math.abs(z+cz)/2
+
+local grad=(math.sqrt(tmp[1]+tmp[2]tmp[3])/100)*stren
+
+if(grad<0) then grad=0 end
+if(grad>100) then grad=100 end
+obj.effect(
+"グラデーション",
+"強さ",grad,
+"中心X",centerX,
+"中心Y",centerY,
+"角度",angle,
+"幅",wid,
+"color_1",color_1,
+"color_2",color_2
+)
+---------------------------------------------------------------
+
+------------------------------------
+@TA四隅配置
+------------------------------------
+--track0:Xずらし,-1000,1000,30
+--track1:Yずらし,-1000,1000,30
+--track2:回転ずらし,-720,720,0
+--track3:仮想バッファ,0,1,0,1
+--dialog:type,local type=1;回転倍率,local mp=1;
+local layer=obj.layer
+local shiftX=obj.track0
+local shiftY=obj.track1
+local w=obj.screen_w/2-obj.w+obj.x
+local scw=obj.screen_w/2
+local sch=obj.screen_h/2
+local h=obj.screen_h/2-obj.h+obj.y
+local oh=obj.h
+local ow=obj.w
+local shiftAngle=obj.track2
+local isBauffer=obj.track3
+local z=obj.getvalue("z")
+
+if(isBuffer==1) then obj.setoption("drawtarget","tmpbuffer") end
+
+if(type==1) then
+obj.draw(w*-1+shiftX, h*-1+shiftY,z,1,1,0,0,shiftAngle*mp)
+obj.draw(w-shiftX, h*-1+shiftY,z,1,1,0,0,shiftAngle*2*mp)
+obj.draw(w-shiftX, h-shiftY,z,1,1,0,0,shiftAngle*3*mp)
+obj.draw(w*-1+shiftX, h-shiftY,z,1,1,0,0,shiftAngle*4*mp)
+
+
+elseif(type==2) then
+obj.draw(scw*-1+ow+shiftX, -shiftY,z,1,1,0,0,shiftAngle)
+obj.draw(scw-ow-shiftX, shiftY,z,1,1,0,0,shiftAngle*mp)
+
+elseif(type==3) then
+obj.draw(scw*-1+ow+shiftX, shiftY,z,1,1,0,0,shiftAngle)
+obj.draw(scw-ow-shiftX, shiftY,z,1,1,0,0,shiftAngle*mp)
+
+
+elseif(type==4) then
+obj.draw(-shiftX, sch*-1+oh+shiftY,z,1,1,0,0,shiftAngle)
+obj.draw(shiftX, sch-oh-shiftY,z,1,1,0,0,shiftAngle*mp)
+
+elseif(type==5) then
+obj.draw(shiftX, sch*-1+oh+shiftY,z,1,1,0,0,shiftAngle)
+obj.draw(shiftX, sch-oh-shiftY,z,1,1,0,0,shiftAngle*mp)
+
+elseif(type==6) then
+obj.draw(scw/2-shiftX, -shiftY,z,1,1,0,0,shiftAngle*mp)
+obj.draw(shiftX, sch/2-shiftY,z,1,1,0,0,shiftAngle*2*mp)
+obj.draw(scw*-1/2+shiftX, shiftY,z,1,1,0,0,shiftAngle*3*mp)
+obj.draw(-shiftX, sch*-1/2+shiftY,z,1,1,0,0,shiftAngle*4*mp)
+
+elseif(type==0) then
+obj.draw(-shiftX, -shiftY,z,1,1,0,0,shiftAngle*mp)
+obj.draw(shiftX, -shiftY,z,1,1,0,0,shiftAngle*2*mp)
+obj.draw(shiftX, shiftY,z,1,1,0,0,shiftAngle*3*mp)
+obj.draw(-shiftX, shiftY,z,1,1,0,0,shiftAngle*4*mp)
+else
+obj.load("You can choose type0~6")
+end
+----------------------------------------------------------------
+
+
+------------------------------------
+@TAシャフト変換
+------------------------------------
+

@@ -1,0 +1,12 @@
+--param:1
+
+local p=obj.getpoint("param")
+local i,af = math.modf(obj.getpoint("index"))
+local gp1,gp2=obj.getpoint(i),obj.getpoint(i+1)
+
+if(type(CT)=="table") and (type(CT[p])~="nil") then
+	return gp1 +(gp2-gp1)*CT[p]
+else
+	debug_print("not found "..p)
+	return gp1 +(gp2-gp1)*af
+end

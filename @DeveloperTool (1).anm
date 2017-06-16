@@ -1,0 +1,92 @@
+--[[このスクリプトはあくまで個人用です。そのため多少の機能不足はご了承願いますようお願いいたします]]--
+
+--------------------------------------------------
+@CustomColor
+--------------------------------------------------
+--track0:R,0,255,0,1
+--track1:G,0,255,0,1
+--track2:B,0,255,0,1
+--track3:memory,1,100,1,1
+--check0:表示,1
+--dialog:Alpha追加(配列四番目)/chk,chkAlpha=0;Alpha数値(0~255),A=0;memory上書き可/chk,ckMemoryOvWrite=0;16進数へ変換/chk,ck16decimal=1;
+local R=obj.track0
+local G=obj.track1
+local B=obj.track2
+local memory=obj.track3
+local ckDisplay=obj.check0
+local tmp={}
+display="TEST"
+
+
+-- 16進数変換
+if(obj.check0) then
+	if(chkAlpha==1) then
+		local result="16進数に変換する場合、Alphaは追加できません。設定を見直してください。"
+	else
+		local result=string.format("0x%02x%02x%02x",R,G,B)
+	end
+else
+	local result={}
+	result[0]=R
+	result[1]=G
+	result[2]=B
+	display=string.format("R:%s, G:%s, B:%s",result[0],result[1],result[2])
+	if(chkAlpha==1) then
+		result[3]=A
+		display=string.format("%s, A:%s",display,result[3])
+	end
+	
+end
+
+
+-- WriteMemory
+if(DT==nil) then 
+	DT={}
+end
+
+if(DT["CustomColor"][memory]==nil) then
+	DT["CustomColor"][memory]=result
+else
+	if(ckMemoryOvWrite==1) then
+		DT["CustomColor"][memory]=result
+	else
+		display=string.format("%s \n(warning:NotOverWriteMemory[メモリーを上書してません。もし心当たりがなければ再度確認してください。])",display)
+	end
+end
+
+-- 表示
+if(ckDisplay==1) then
+	obj.effect()
+	obj.load(display)
+end
+
+display=nil
+
+--------------------------------------------------
+@補色変換グラデーション
+--------------------------------------------------
+--track0:R,0,255,0,1
+--track1:G,0,255,0,1
+--track2:B,0,255,0,1
+--track3:角度,-1280,1280,130
+--check0:表示,1
+--dialog:中心x,centerX=0;中心y,centerY=0;幅,width=300;
+local R=obj.track0
+local G=obj.track1
+local B=obj.track2
+local angle=obj.track3
+
+if(obj.check0) then
+	local reR,reG,reB=255-R,255-G,255-B
+	local col=string.format("0x%02x%02x%02x",R,G,B)
+	local reCol=string.format("0x%02x%02x%02x",reR,reG,reB)
+	obj.effect(
+	"グラデーション",
+	"強さ",100,
+	"中心X",centerX,
+	"中心Y",centerY,
+	"角度",angle,
+	"幅",width,
+	"color",col,
+	"color2",reCol)
+end
