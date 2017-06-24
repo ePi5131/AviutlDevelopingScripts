@@ -1,0 +1,141 @@
+--[[
+]]
+
+--------------------------------------------------------------------------------
+@Map保存
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+@実行
+--------------------------------------------------------------------------------
+
+--track0:mxRange,0,300,10,1
+--track1:diving,2,255,10,1
+--track2:focus,0,255,127,1
+--track3:layer,-1,100,0,1
+--dialog:レンズブラー/chk,local isLensBlur=0;無視色追加/chk,local isAddIgnore=0;無視色/col,local isIgnoreCol=0xff0000;保存Mapを使用/chk,local isUsingSavedMap=0;保存Map格納場所,local savingMapNum=1;
+
+local r,d=obj.track0,obj.track1
+local i,j,k,div_tet,div_map,div_result,n,h,s,v,r,g,b,a,col,lp,l,dn,dm,tmp,mtmp,rtmp,ltmp
+local dw,dh=obj.getpixel()
+local layer,mlayer=obj.layer,obj.track3
+local log=function(s) if(obj.getinfo("saving")==false) then debug_print(s) end end
+
+----------------------------------------function
+
+--[[
+	functions:
+			getPixelToDiv
+				画像データから連想配列ピクセル
+
+]]
+
+local getPixelToDiv = function(w,h)
+	log("starting function:")
+	log("    getPixelToDiv")
+	log(" ")
+	div={}
+	local r,g,b,l,col,a,i,j
+	for i=1,dw do
+		div[i]={}
+		for j=1,dh do
+			col,a=obj.getpixel(i,j)
+--	 		h,s,v=HSV(col)
+			r,g,b=RGB(col)
+			l=(r+g+b)/3
+			div[i][j]={
+				R		=	r,
+				G		=	g,
+				B		=	b,
+				L		=	l,
+				col		=	col,
+				A		=	a,
+				i		=	i,
+				j		=	j,
+				map		=	0,
+				source	=	0
+			}
+		end
+	end
+	log("getPixelToDiv: finished!;")
+	return div
+end
+----------------------------------------
+
+--[[
+	copybuffer - cache:
+		source
+		- ソース. 実行したオブジェクトとなる。
+		- link:  cache:BM.(layer):source
+		
+		map
+		- ブラーマップ. ソースをぼかすマップの元ソース。
+		- link:  cache:BM.(layer):source
+		
+		savedmap
+		- 別にて保存したマップ. mapに置き換えるのみなので仮置き。
+		- link:  cache:BMmap:(saved num)
+		
+	
+	*	copybufferは色々とメモリを圧迫する模様。
+	*	可能であればrikky_moduleを使用したく思うが、
+	*	依存性をなくしたいため一応copybufferの機能も追加しておく。
+]]
+
+div_tet,div_map,div_result={},{},{}
+
+div_tet=getPixelToDiv(dw,dh)
+obj.copybuffer("cache:BM."..layer..":source",obj)
+
+---
+log("checking if it can use saved map")
+if(isUsingSavedMap==1) then
+	obj.copybuffer("obj","cache:BMmap:"..savingMapNum)
+	div_map=getPixelToDiv(dw,dh)
+	obj.copybuffer("cache:BM."..layer..":map","obj")
+else
+	if(mlayer==-1) then
+		l=layer+1
+	elseif(mlayer==0) then
+		l=layer-1
+	else
+		l=mlayer
+	end
+	
+	obj.load("layer",l,true)
+	div_map=getPixelToDiv(dw,dh)
+	obj.copybuffer("cache:BM."..layer..":map","obj")
+end
+
+---
+log("starting to map pixel sorting on Light...")
+n=255/d
+for k=1,d do
+	dn=n*(k-1)
+	dm=n*(k)
+	rtmp={}
+	for i=1,dw do
+		for j=1,dh do
+			tmp=div_map[i][j]
+			ltmp=tmp.L
+			if(ltmp.L>=dn) and (ltmp.L<=dm) then
+				table.insert(rtmp,tmp)
+			end
+		end
+	end
+	div_result[k]=rtmp
+end
+
+---
+log("starting to create result image and blur source on map")
+
+obj.setoption("dst","tmp",dw,dh)
+
+for k=1,d do
+	tmp=div_result[k]
+	rtmp={}
+	for i=1,#tmp do
+		
+	end
+end

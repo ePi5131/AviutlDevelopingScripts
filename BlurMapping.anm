@@ -1,7 +1,0 @@
---[[
-]]
---track0:mxRange,0,300,10,1
---track1:diving,2,255,10,1
---track2:focus,0,255,127,1
---track3:layer,-1,100,0,1
---dialog:レンズブラー/chk,local isLensBlur=0;無視色追加/chk,local isAddIgnore=0;無視色/col,local isIgnoreCol=0xff0000;
