@@ -1,0 +1,80 @@
+--track0:AF%,0,100,0
+--dialog:座標,pos={-obj.w/2,-obj.h/2,0,-obj.h/2,obj.w/2,-obj.h/2,obj.w/2,0,obj.w/2,obj.h/2,0,obj.h/2,-obj.w/2,obj.h/2,-obj.w/2,0,-obj.w/4,-obj.h/4,0,-obj.h/4,obj.w/4,-obj.h/4,obj.w/4,0,obj.w/4,obj.h/4,0,obj.h/4,-obj.w/4,obj.h/4,-obj.w/4,0};分割数,local div=8;
+
+local log=function(s) if(obj.getinfo("saving")==false) then debug_print(s) end end
+local w,h,sx,ex,sy,ey,s,i,j,k,xpos,ypos
+
+if(obj.getoption("track_mode",0)==0)then
+	obj.setanchor("pos",8,"loop")
+else
+	obj.setanchor("pos",16,"loop","inout")
+	s=obj.track0/100
+	for i=1,8 do
+		pos[i]=pos[i]+(pos[i+16]-pos[i])*s
+	end
+end
+if(div<1) then div=1  end
+if(div>50)then div=50 end
+
+sx = math.min(pos[1],pos[3],pos[5],pos[7],pos[9],pos[11],pos[13],pos[15])
+ex = math.max(pos[1],pos[3],pos[5],pos[7],pos[9],pos[11],pos[13],pos[15])
+sy = math.min(pos[2],pos[4],pos[6],pos[8],pos[10],pos[12],pos[14],pos[16])
+ey = math.max(pos[2],pos[4],pos[6],pos[8],pos[10],pos[12],pos[14],pos[16])
+w = math.ceil(ex-sx)
+h = math.ceil(ey-sy)
+sx = (sx+ex)/2
+sy = (sy+ey)/2
+for i=0,6 do
+	s = i*2+1
+	pos[s  ] = pos[s  ] - sx
+	pos[s+1] = pos[s+1] - sy
+end
+obj.setoption("drawtarget","tempbuffer",w,h)
+obj.setoption("blend","alpha_add")
+
+w,h=obj.getpixel()
+local x0,x1,x2,x3,y0,y1,y2,y3,u0,u1,u2,u3,v0,v1,v2,v3,dx0,dx1,dx2,dx3,dy0,dy1,dy2,dy3,px0,px1,px2,px3,py0,py1,py2,py3,ax0,ax1,ax2,ax3,ay0,ay1,ay2,ay3
+local c0,c1=
+{
+	x=(pos[1]+pos[3]+pos[5]+pos[7]+pos[9]+pos[11]+pos[13]+pos[15])/8,
+	y=(pos[2]+pos[4]+pos[6]+pos[8]+pos[10]+pos[12]+pos[14]+pos[16])/8
+},
+{
+	x=(pos[1+16]+pos[3+16]+pos[5+16]+pos[7+16]+pos[9+16]+pos[11+16]+pos[13+16]+pos[15+16])/8,
+	y=(pos[2+16]+pos[4+16]+pos[6+16]+pos[8+16]+pos[10+16]+pos[12+16]+pos[14+16]+pos[16+16])/8
+}
+for k=0,3 do
+	px0,px1,px2,px3=
+		pos[( 0+k*2)%16+1],
+		pos[( 2+k*2)%16+1],
+		c0.x, -- pos[(-0+k*2)%16+1],
+		pos[(-4+k*2)%16+1]
+
+	py0,py1,py2,py3=
+		pos[( 1+k*2)%16+1],
+		pos[( 3+k*2)%16+1],
+		c0.y, -- pos[( 1+k*2)%16+1],
+		pos[(-1+k*2)%16+1]
+
+	dx0,dx1,dx2,dx3=
+		pos[( 0+k*2)%16+1+16],
+		pos[( 2+k*2)%16+1+16],
+		c1.x, -- pos[(-0+k*2)%16+1],
+		pos[(-4+k*2)%16+1+16]
+
+	dy0,dy1,dy2,dy3=
+		pos[( 1+k*2)%16+1+16],
+		pos[( 3+k*2)%16+1+16],
+		c1.y, -- pos[( 1+k*2)%16+1],
+		pos[(-1+k*2)%16+1+16]
+
+	for i=1,div do --x
+		ax0,ax1,ax2,ax3=
+			px0+
+		for j=1,div do --y
+		end
+	end
+end
+obj.load("tempbuffer")
+obj.cx = obj.cx - sx
+obj.cy = obj.cy - sy

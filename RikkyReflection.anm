@@ -58,17 +58,17 @@ LastEdit: 20:08 2017/02/11
 --track2:äiî[ÉåÉCÉÑÅ[êÊ,0,100,0,1
 --track3:éÂëÃâª,0,1,0,1
 --check0:äiî[é¿çs,0
---dialog:lightR,local lightR=255;lightG,local lightG=255;lightB,local lightB=255;ambientR(%),local ambientR=100;ambientG(%),local ambientG=100;ambientB(%),local ambientB=100;emissiveR,local emissiveR=0;emissiveG,local emissiveG=0;emissiveB,local emissiveB=0;specularR, local specularR=255;specularG, local specularG=255;specularB, local specularB=255;
+--dialog:lightR,local lightR=255;lightG,local lightG=255;lightB,local lightB=255;ambientR(%),local ambientR=100;ambientG(%),local ambientG=100;ambientB(%),local ambientB=100;emissiveR,local emissiveR=255;emissiveG,local emissiveG=255;emissiveB,local emissiveB=255;specularR, local specularR=255;specularG, local specularG=255;specularB, local specularB=255;
 
 local af,shininess=obj.track0/100,obj.track1
 require("rikky_module")
 local data = {
-	light_num	=	1																	,
-	position1	=	{object="shadow"													},
-	light1		=	{R=lightR*af, 	G=lightG*af, 	B=lightB*af 						},
-	ambient 	=	{R=ambientR, 	G=ambientG, 	B=ambientB							},
-	emissive 	=	{R=emissiveR, 	G=emissiveG,	B=emissiveB							},
-	specular 	=	{R=specularR*af,G=specularG*af, B=specularB*af, shininess=shininess	}
+	light_num=1,
+	position1={object="shadow"},
+	light1={R=lightR*af, G=lightG*af, B=lightB*af},
+	ambient={R=ambientR, G=ambientG, B=ambientB},
+	emissive={R=emissiveR, G=emissiveG, B=emissiveB},
+	specular={R=specularR, G=specularG, B=specularB, shininess=shininess}
 }
 local l=(obj.track2~=0 and obj.track2) or obj.layer
 
@@ -77,21 +77,6 @@ if(obj.check0) and (obj.track3==0) then
 	RR[l]={data=data}
 end
 if(obj.track3==1) then
-	local x,y,z=
-		obj.ox,
-		obj.oy,
-		obj.oz
-	local rx,ry,rz=
-		obj.rx, --Z roll
-		obj.ry, --X pitch
-		obj.rz  --Y yaw
-	local w,h=obj.w,obj.h
-	local sin,cos=function(n) return math.sin(math.rad(n)) end,function(n) return math.cos(math.rad(n)) end
-	-- local x0,x1,x2,x3=
-	-- 	cos(rx)*cos(ry)*w/2,
-		
-	-- local y0,y1,y2,y3=
-	-- local z0,z1,z2,z3=
 	rikky_module.materialdraw_init(data)
 	rikky_module.materialdraw()
 end

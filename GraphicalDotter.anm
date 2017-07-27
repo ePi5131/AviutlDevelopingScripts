@@ -1,0 +1,29 @@
+--track0:モザイク%,0,100,25,0.01
+--track1:減色ﾚﾍﾞﾙ,0,8,4,1
+--check0:モザイクを先処理,0
+--dialog:正規値(0-255),local trueRange=255;誤差値(0-255),local falseRange=20;
+require("regret_core")
+
+local yuuki_subtractive=function()
+	local level=obj.track1
+	local threshold1,threshold2=trueRange,falseRange
+	local userdata,w,h=obj.getpixeldata()
+	regret.core.posterize2(userdata,w,h,level,threshold1,threshold2)
+	obj.putpixeldata(userdata)
+	userdata,w,h=nil,nil,nil
+end
+
+local gFirm_mosaic=function()
+	local d=obj.track0>0 and obj.track0 or 1
+	local bh,dh=d,10000/d
+	obj.effect("リサイズ","拡大率",bh,"補間なし",0)
+	obj.effect("リサイズ","拡大率",dh,"補間なし",1)
+end
+
+if(obj.check0) then
+	gFirm_mosaic()
+	yuuki_subtractive()
+else
+	yuuki_subtractive()
+	gFirm_mosaic()
+end

@@ -1,0 +1,9 @@
+--track0:X,-1000,1000,0
+--track1:Y,-1000,1000,0
+--track2:times,2,10,2,1
+--check0:XYÇãtçsÇ≥ÇπÇÈ
+
+local i,n=obj.index,obj.num
+local dx,dy=obj.track0,obj.track1
+local x,y=obj.ox+obj.x,obj.oy+obj.y
+
