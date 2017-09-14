@@ -1,9 +1,5 @@
---track0:X,-1000,1000,0
---track1:Y,-1000,1000,0
---track2:times,2,10,2,1
---check0:XYÇãtçsÇ≥ÇπÇÈ
+--track0:X,-1000,1000,0,0.01
 
-local i,n=obj.index,obj.num
-local dx,dy=obj.track0,obj.track1
-local x,y=obj.ox+obj.x,obj.oy+obj.y
-
+local i=obj.index
+local d=(i%2==0) and -1 or 1
+obj.ox=obj.ox+obj.track0*d*math.abs(obj.ox)

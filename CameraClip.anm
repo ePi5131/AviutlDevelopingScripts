@@ -1,0 +1,31 @@
+--track0:repeats,1,20,5,1
+--track1:rpRange,0,1000,200
+--track2:zooming,0,100,100
+
+local cam=obj.getoption("camera_param")
+local n,h,dz=obj.track0,obj.h,obj.track1 					--n:個数, h:高さ, dz:各オブジェクト距離
+local theta=math.atan(obj.screen_h/(cam.d*2))*360/math.pi/2 --視野角
+local af=obj.track2/100
+local i,t,s,d
+t=theta
+local log=function(s) if(obj.getinfo("saving")==false) then debug_print(s) end end
+
+--[[
+	基本として、視野角を用いた見せかけのサイズを表現する。
+	視角をT, 距離をD, 倍率をSとすると
+	T=S/D
+	の関係式が成り立つ。移項してS=D*Tなので、これを利用して表現している(はず)。
+]]
+obj.effect("斜めクリッピング")
+obj.copybuffer("tmp","obj") --フレームバッファ用
+
+for i=0,n-1 do
+	d=dz*i
+	--s=d*t/h*af
+	obj.copybuffer("obj","tmp")
+	--obj.effect("斜めクリッピング","幅",-20*(n-i))
+	obj.draw(0,0,d)
+	--log(s)
+end
+--s=dz*n*t/h*af
+--obj.draw(0,0,dz*n,s)

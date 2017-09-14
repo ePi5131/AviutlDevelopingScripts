@@ -1,0 +1,41 @@
+@tracks
+--track0:A,-99999,99999,0
+--track1:B,-9999,9999,0,0.01
+--track2:C,-100,100,0,1
+--track3:D,0,100,0
+--dialog:Ši•ÊŠi”[,local save=1;
+
+local layer=obj.layer
+if(type(VT)~="table") then VT={} end
+if(type(VT.tracks)~="table") then VT.tracks={} end
+
+if(VT.tracks["layer"..layer]==nil) then 	VT.tracks["layer"..layer]={}	end
+if(VT.tracks[layer]==nil) then 			VT.tracks[layer]={} 			end
+if(save) then
+	VT.tracks["layer"..layer][save], VT.tracks[layer][save]={}, {}
+	VT.tracks["layer"..layer][save]	=	{obj.track0, obj.track1, obj.track2, obj.track3}
+	VT.tracks[layer][save]			=	{obj.track0, obj.track1, obj.track2, obj.track3}
+end
+
+@coors
+--track0:getorigin,0,1,1,1
+--track1:X,-9999,9999,0
+--track2:Y,-9999,9999,0
+--track3:Z,-9999,9999,0
+--dialog:Ši•ÊŠi”[,local save=1;
+
+local layer=obj.layer
+if(type(VT)~="table") then VT={} end
+if(type(VT.coors)~="table") then VT.coors={} end
+
+if(VT.coors["layer"..layer]==nil) then 	VT.coors["layer"..layer]={}	end
+if(VT.coors[layer]==nil) then 			VT.coors[layer]={} 			end
+if(obj.track0==1) then
+	VT.coors["layer"..layer][save], VT.coors[layer][save]={}, {}
+	VT.coors["layer"..layer][save]	=	{obj.ox+obj.x, obj.oy+obj.y, obj.oz+obj.z}
+	VT.coors[layer][save]			=	{obj.ox+obj.x, obj.oy+obj.y, obj.oz+obj.z}
+if(save) then
+	VT.coors["layer"..layer][save], VT.coors[layer][save]={}, {}
+	VT.coors["layer"..layer][save]	=	{obj.track1, obj.track2, obj.track3}
+	VT.coors[layer][save]			=	{obj.track1, obj.track2, obj.track3}
+end

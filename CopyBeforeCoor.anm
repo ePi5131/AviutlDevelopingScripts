@@ -1,0 +1,16 @@
+--track0:XŽ²‰ÁŽZ,-2000,2000,0,0.01
+--track1:YŽ²‰ÁŽZ,-2000,2000,0,0.01
+--track2:ZŽ²‰ÁŽZ,-2000,2000,0,0.01
+--track3:AF(%),0,100,100,0.01
+--check0:active,1
+--dialog:XŽ²copy/chk,local isActiveX=1;YŽ²copy/chk,local isActiveY=1;ZŽ²copy/chk,local isActiveZ=1;Z‰ñ“]copy/chk,local isActiveRZ=1;Z‰ñ“]‰ÁŽZ,local addRZ=0;
+
+local ax,ay,az,af,l=obj.track0,obj.track1,obj.track2,obj.track3/100,obj.layer-1
+local gv=function(l,s) return obj.getvalue("Layer"..l.."."..s) end
+
+if obj.check0 then
+	if (isActiveX==1) then 	obj.ox=obj.ox+(gv(l,"x")+ax)*af 		end
+	if (isActiveY==1) then 	obj.oy=obj.oy+(gv(l,"y")+ay)*af 		end
+	if (isActiveZ==1) then 	obj.oz=obj.oz+(gv(l,"z")+az)*af 		end
+	if (isActiveRZ==1) then obj.rz=obj.rz+(gv(l,"rz")+addRZ)*af 	end
+end
