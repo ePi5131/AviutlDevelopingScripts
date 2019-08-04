@@ -18,7 +18,7 @@ int ToGreen(lua_State *L) {
 	// DLLを読み込んでもエフェクトがかからない場合は、このようにOutputDebugStringを埋め込むとよい
 	// 呼び出してもDebugStringが出力されない場合は、そもそも関数が呼び出せていない可能性が高い
 	// 実際にリリースする際は意図的に他人のPCでもDebugStringを出したい場合を除いてなるべく消しておくこと
-	OutputDebugString("美少女に逆レイプされたい");
+	OutputDebugString("");
 	// Luaからの引数をスタックを通して受け取る
 	// lua_touserdataで画像の配列データ等のUserDataを受け取れる
 	// 第二引数の1は、Lua側から受け取った引数の第一引数を受け取ることを示している
