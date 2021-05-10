@@ -1,0 +1,87 @@
+@LoadSourcemap
+--track0:SaveNum,1,100,1,1
+--check0:run_save,0
+require("rikky_module")
+
+if rikky_module then
+	if obj.check0 and not rikky_module.reloadbuffer() then
+		rikky_module.image("w","TS:"..obj.track0)
+	end
+else
+	obj.setfont("メイリオ",30)
+	obj.load("rikky_moduleが正しく読み込まれていません\ndllが正しく導入されているか、ファイルの位置を確認してください。")
+end
+
+@Main
+--track0:先読み数,0,60,10,1
+--track1:読込場所,1,100,1,1
+--check0:実行,0
+
+debug_print("ran through outside")
+
+local n,p=obj.track0,obj.track1
+
+if rikky_module then require("rikky_module") end
+if rikky_module and obj.check0 then -- rikky_moduleの存在を確認, obj.check0==trueを確認
+	-- if rikky_module.getinfo and tonumber(rikky_module.getinfo("version",2)) => 1.3 then --rikky_moduleのバージョンを確認
+	if not rikky_module.reloadbuffer() then
+		debug_print("ran through inside")
+		function TableSearch (list)
+			local set = {}
+			for _, l in ipairs(list) do set[l] = true end
+			return set
+		end
+		local imagetable = TableSearch(rikky_module.image("g+"))
+		if imagetable["TS:"..p] then --画像の存在を確認
+			local odata,ow,oh = rikky_module.image("i","TS:"..p)
+			if ow==obj.w and oh==obj.h then
+
+				-- MAIN ---------
+
+				-- defines
+				local function TimeSlicing(n,t)
+					return function(fr, fg, fb, fa, dr, dg, db, da, x, y)
+						assert(loadstring("local n,t="..n..","..t))()
+						local v = math.floor((dr+dg+db)/3/255*n)
+						if (t-1)<=v and v<=t then
+							-- return fr,fg,fb,fa
+							return 255/n*t, 255/n*t, 255/n*t, 1
+						else
+							return 0,0,0,0
+						end
+					end
+					
+				end
+
+				-- running
+				-- obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+				for i=1,n-1 do
+					-- obj.setoption("dst","tmp")
+					rikky_module.reloadbuffer(i)
+					-- rikky_module.pixelfunction(TimeSlicing(n,i),odata)
+					-- obj.draw()
+				end
+
+				-- display
+				-- obj.copybuffer("obj","tmp")
+				-- debug_print()
+
+				------------------- 以下エラー表示
+			else
+				obj.setfont("メイリオ",30)
+				obj.load("ソースマップとのオブジェクトの画像サイズが合いません\nソースマップと画像サイズを同じにしてください")
+			end
+		else 
+			obj.setfont("メイリオ",30)
+			obj.load("指定場所にソースマップが保存されていません。\nソースマップを保存して再度実行してください")
+		end
+	end
+	-- else
+	-- 	obj.setfont("メイリオ",30)
+	-- 	obj.load("rikky_moduleのバージョンが、スクリプトが使用するバージョンに満たされていません\ndllを更新してください")
+	-- end
+
+elseif not rikky_module then
+	obj.setfont("メイリオ",30)
+	obj.load("rikky_moduleが正しく読み込まれていません\ndllが正しく導入されているか、ファイルの位置を確認してください。")
+end

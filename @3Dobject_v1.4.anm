@@ -120,7 +120,7 @@ mesh={
 	glass					= {}								, --[table]		(elements)
 
 --|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
-	Rect = function(col,coor,uv,isFlat)
+	Rect = function(col,coor,uv)
 --|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||--
 		if not mesh.iserror then
 			local x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3=unpack(coor)
@@ -163,24 +163,16 @@ mesh={
 			if mesh.isReflection==1 then
 				if TDO and TDO["materials"] and TDO["materials"][obj.layer] and rikky_module then
 					local material = rikky_module.materialdrawEx(TDO["materials"][obj.layer]) 
-					if isFlat then
-						material:drawpoly(
-							x0,y0,z0,
-							x1,y1,z1,
-							x2,y2,z2,
-							x3,y3,z3,
-							u0,v0,
-							u1,v1,
-							u2,v2,
-							u3,v3
-						)
-					else
-						material:draw(
-							x0,
-							y0,
-							z0
-						)
-					end
+					material:drawpoly(
+						x0,y0,z0,
+						x1,y1,z1,
+						x2,y2,z2,
+						x3,y3,z3,
+						u0,v0,
+						u1,v1,
+						u2,v2,
+						u3,v3
+					)
 				elseif type(rikky_module)~="table" then
 					obj.setfont("メイリオ",60)
 					log("error: not found table'rikky_module'. at layer"..obj.layer)
@@ -195,24 +187,16 @@ mesh={
 			elseif mesh.isReflection==2 then
 				if TDO and TDO["glasses"] and TDO["glasses"][obj.layer] and rikky_module then
 					rikky_module.glassdraw_init(TDO["glasses"][obj.layer])
-					if isFlat then
-						rikky_module.glassdraw(
-							x0,y0,z0,
-							x1,y1,z1,
-							x2,y2,z2,
-							x3,y3,z3,
-							u0,v0,
-							u1,v1,
-							u2,v2,
-							u3,v3
-						)
-					else
-						rikky_module.glassdraw(
-							x0,
-							y0,
-							z0
-						)
-					end
+					rikky_module.glassdraw(
+						x0,y0,z0,
+						x1,y1,z1,
+						x2,y2,z2,
+						x3,y3,z3,
+						u0,v0,
+						u1,v1,
+						u2,v2,
+						u3,v3
+					)
 				elseif type(rikky_module)~="table" then
 					obj.setfont("メイリオ",60)
 					log("error: not found table 'rikky_module'. at layer"..obj.layer)
@@ -225,19 +209,17 @@ mesh={
 					mesh.iserror = true
 				end
 			else
-				-- if isFlat then
 				-- log("success")
-					obj.drawpoly(
-						x0,y0,z0,
-						x1,y1,z1,
-						x2,y2,z2,
-						x3,y3,z3,
-						u0,v0,
-						u1,v1,
-						u2,v2,
-						u3,v3
-					)
-				-- end
+				obj.drawpoly(
+					x0,y0,z0,
+					x1,y1,z1,
+					x2,y2,z2,
+					x3,y3,z3,
+					u0,v0,
+					u1,v1,
+					u2,v2,
+					u3,v3
+				)
 			end
 		end
 	end,
@@ -280,8 +262,6 @@ mesh={
 				-- 	end
 				end
 			end
-			-- if #coor<12 and 
-
 			if mesh.isReflection==1 then
 				if TDO and TDO["materials"] and TDO["materials"][obj.layer] and rikky_module then
 					local material = rikky_module.materialdrawEx(TDO["materials"][obj.layer]) 
@@ -574,7 +554,6 @@ end
 
 
 
-
 -------------------------------------------------------
 @光源初期化(最初の光源で光源設定の前に必ず設定してください)
 -------------------------------------------------------
@@ -597,7 +576,7 @@ end
 -------------------------------------------------------
 --track0:blur,0,200,0
 --track1:refr(%),0,100,80
---track2:zoom%,0,300,100
+--track2:zoom%,50,300,100
 --track3:lens[type],1,2,1,1
 --dialog:dialog,val="";
 if not rikky_module then require("rikky_module") end
@@ -1175,30 +1154,5 @@ if(obj.check0) and (mesh) then
 			end
 		end
 	end
-end
-mesh=nil
-
-
-
-
-
--------------------------------------------------------
-@平面描画
--------------------------------------------------------
---track0:FlatShd,0,1,1,1
---track1:zoom(%),0,300,100
---check0:表示,0
-local isUsingFlatshader,zoom=obj.track0==1 and true or false,obj.track1/100
-
-local af=mesh.SetUp(1)
-local ap,at=mesh.Ap,mesh.AppearType
-local ox,oy,oz=obj.ox,obj.oy,obj.oz
-local w,h=obj.w,obj.h
-
-if mesh and obj.check0 and not mesh.iserror then
-
-	-- obj.effect("リサイズ","左",w*(1-ap(1,1,af)),"上",(1-ap(2,1,af)))
-	-- obj.zoom=obj.zoom*zoom*ap(3,1,af)
-	mesh.Rect(false,{0,0,0},false,isUsingFlatshader)
 end
 mesh=nil

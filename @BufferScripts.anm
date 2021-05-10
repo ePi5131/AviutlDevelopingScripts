@@ -58,13 +58,14 @@ local saveFrame=obj.track0
 local speed=obj.track1/100
 -------------------
 
+
 require("rikky_module")
 local nm="BS"
 local i
 local n,d,l=saveFrame,difFrame,obj.track3
 local f=math.floor(obj.frame/speed)%n+1
 local fd=math.floor(obj.frame/speed+d)%n+1
-local iwr,ird,icl=
+local write,read,clear=
 	function(k) rikky_module.image("w",k) end,
 	function(k) rikky_module.image("r",k) end,
 	function(k) rikky_module.image("c",k) end
@@ -72,13 +73,13 @@ local iwr,ird,icl=
 
 if(obj.frame==0) then
 	for i=1,n do
-		icl(nm..":"..l..":"..i)
+		clear(nm..":"..l..":"..i)
 	end
 end
-iwr(nm..":"..l..":"..f)
+write(nm..":"..l..":"..f)
 if(obj.frame==obj.totalframe) then
 	for i=1,n do
-		icl(nm..":"..l..":"..i)
+		clear(nm..":"..l..":"..i)
 	end
 end
 if(type(DB)~="table") then DB={} end
@@ -93,6 +94,7 @@ end
 @DelayBuffer - Read
 --------------------------------------------------------------
 --track0:フレーム差,0,50,3,1
+--track1:輝度値,0,4096,2048,1
 --track3:読込場所,1,100,1,1
 
 
@@ -102,12 +104,12 @@ local i
 local d,l=obj.track0,obj.track3
 local speed,n=DB[l].speed,DB[l].n
 local fd=math.floor(obj.frame/speed+d)%n+1
-local iwr,ird,icl=
+local write,read,clear=
 	function(k) rikky_module.image("w",k) end,
 	function(k) rikky_module.image("r",k) end,
 	function(k) rikky_module.image("c",k) end
 
-ird(nm..":"..l..":"..fd)
+read(nm..":"..l..":"..fd)
 
 --------------------------------------------------------------
 @DelayBuffer - Diff
@@ -123,12 +125,12 @@ local i
 local d1,d2,l,l2=obj.track0,obj.track1,obj.track2,obj.track3
 local speed,n,speed2,n2=DB[l].speed,DB[l].n,DB[l2].speed,DB[l2].n
 local fd1,fd2=math.floor(obj.frame/speed+d1)%n+1, math.floor(obj.frame/speed2+d2)%n2+1
-local iwr,ird,icl=
+local write,read,clear=
 	function(k) rikky_module.image("w",k) end,
 	function(k) rikky_module.image("r",k) end,
 	function(k) rikky_module.image("c",k) end
 
-ird(nm..":"..l..":"..fd2)
+read(nm..":"..l..":"..fd2)
 if(isLumi==1) then
 	obj.effect("ルミナンスキー",
 		"type",0,
@@ -145,7 +147,7 @@ if(isLumiLight==1) then
 end
 obj.copybuffer("cache:BS-tmp","obj")
 obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
-ird(nm..":"..l..":"..fd1)
+read(nm..":"..l..":"..fd1)
 if(isLumi==1) then
 	obj.effect("ルミナンスキー",
 		"type",0,
@@ -166,6 +168,79 @@ obj.copybuffer("obj","cache:BS-tmp")
 obj.draw()
 obj.load("tempbuffer")
 
+
+--------------------------------------------------------------
+@DelayBuffer - Slices
+--------------------------------------------------------------
+--track0:縦,1,18,9,1
+--track1:横,1,10,5,1
+--track2:順,1,5,5,1
+--track3:ずれ度,0,300,50
+--dialog:読込場所,local l=1;
+
+require("rikky_module")
+local nm="BS"
+local i
+local w,h,o,d=obj.track0,obj.track1,obj.track2,obj.track3
+local sw,sh=obj.getpixel()
+local t,at=obj.frame,obj.totalframe
+
+local speed,n=DB[l].speed,DB[l].n
+-- local fd1=math.floor(obj.frame/speed+d1)%n+1
+local write,read,clear=
+	function(k) rikky_module.image("w",k) end,
+	function(k) rikky_module.image("r",k) end,
+	function(k) rikky_module.image("c",k) end
+local m=math.max(w,h)
+
+local ordering=function(t,dw,dh,w,h,o)
+	local n=math.max(w,h)
+	if 		o==1 then
+		return math.floor(math.abs(dw-w/2)+1)
+	elseif 	o==2 then
+		return math.floor(math.abs(dh-h/2)+1)
+	elseif 	o==3 then
+		return 
+	elseif 	o==4 then
+	else
+	end
+end
+
+obj.copybuffer("cache:BS-tmp","obj")
+obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+-- read(nm..":"..l..":"..fd1)
+-- read(nm..":"..l..":"..fd2)
+
+for i=1,w do
+	for j=1,h do
+		g=ordering(t,i,j,w,h,o)
+		-- log("i(w):"..i..", j(h):"..j.."; g:"..g)
+		read(nm..":"..l..":"..math.floor(n*g/m))
+		obj.effect("クリッピング",
+			"上",sh/h*(j-1),
+			"下",sh/h*(j-1),
+			"右",sw/w*(i-1),
+			"左",sw/w*(i-1)
+			)
+		obj.effect("単色化","color",0xff0000,"強さ",g*10,"輝度を保持する",0)
+		obj.draw()
+		-- obj.load("i(w):"..i..", j(h):"..j..";")
+		-- obj.draw(sw/w*(i-1)-sw/2,sh/h*(j-1)-sh/2)
+	end
+end
+
+
+if t==at then 
+	for i=1,n do
+		c(bname..i)
+	end
+end
+
+
+obj.copybuffer("obj","cache:BS-tmp")
+obj.draw()
+obj.load("tempbuffer")
+
 --------------------------------------------------------------
 @EffectBuffer - Compo
 --------------------------------------------------------------
@@ -181,12 +256,12 @@ local i
 local d1,d2,l,l2=obj.track0,obj.track1,obj.track2,obj.track3
 local speed,n,speed2,n2=DB[l].speed,DB[l].n,DB[l2].speed,DB[l2].n
 local fd1,fd2=math.floor(obj.frame/speed+d1)%n+1, math.floor(obj.frame/speed2+d2)%n2+1
-local iwr,ird,icl=
+local write,read,clear=
 	function(k) rikky_module.image("w",k) end,
 	function(k) rikky_module.image("r",k) end,
 	function(k) rikky_module.image("c",k) end
 
-ird(nm..":"..l..":"..fd1)
+read(nm..":"..l..":"..fd1)
 if(isLumi==1) then
 	obj.effect("ルミナンスキー",
 		"type",0,
@@ -197,7 +272,7 @@ end
 obj.copybuffer("cache:BS-tmp","obj")
 
 obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
-ird(nm..":"..l..":"..fd2)
+read(nm..":"..l..":"..fd2)
 if(isLumi==1) then
 	obj.effect("ルミナンスキー",
 		"type",0,

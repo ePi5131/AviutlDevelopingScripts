@@ -1,0 +1,127 @@
+--------------------------------------------------
+@barcode(JAN/EAN/UPC)
+--[[
+    参考: https://www.keyence.co.jp/ss/products/autoid/codereader/basic-ean.jsp
+]]
+--------------------------------------------------
+--track0:AF(%),0,1000,0
+--track1:type,0,1,0,1
+--track2:module,1,16,4,1
+--track3:height,150,1000,150,1
+--check0:showNumber,1
+--dialog:codes,local codes="0123456123456";background/col,local bgcol=0xffffff;code/col,local col=0x000000;
+
+-- package.cpath=package.cpath..";"..obj.getinfo"script_path":gsub("[^\\]+\\$","?.lua")
+local f=require"aodaruma_barcode"
+if not f then
+    obj.setfont("メイリオ",50)
+    local msg = "@Encoder.obj:\naodaruma_barcode.luaがscriptフォルダー以下に見つかりませんでした。\nスクリプトが所定の場所にあるか確認してください。"
+    obj.load(msg)
+    error(msg)
+end
+
+local af,t,u,h = obj.track0/100,obj.track1,obj.track2,obj.track3
+if t==0 then
+    if #codes==13 and tonumber(codes) then
+        local w = u*113
+        -- obj.setoption("dst","obj")
+        f.drawBase(w, h, bgcol)
+        obj.draw()
+
+        ------ generate patterns ------
+        local L_bars = ""
+        local R_bars = ""
+
+        -- left pattern
+        local leftPattern = f.JAN.leadnumber[tonumber(codes:sub(1,1))+1]
+        for i=2,7 do
+            if leftPattern:sub(i,i)=="0" then
+                L_bars = L_bars..f.JAN.left.odd[tonumber(codes:sub(i,i))+1]
+            else
+                L_bars = L_bars..f.JAN.left.even[tonumber(codes:sub(i,i))+1]
+            end
+        end
+
+        -- right pattern
+        for i=8,13 do
+            R_bars = R_bars..f.JAN.right[tonumber(codes:sub(i,i))+1]
+        end
+
+        ------ draw patterns & bars ------
+        local dh = obj.check0 and u*7 or 0
+        f.drawCode(u*10,0,  h,      u,  "01010",5, col)
+        f.drawCode(u*15,0,  h-dh,   u,  L_bars, 7, col)
+        f.drawCode(u*57,0,  h,      u,  "01010",5, col)
+        f.drawCode(u*62,0,  h-dh,   u,  R_bars, 7, col)
+        f.drawCode(u*104,0, h,      u,  "0101", 4, col)
+
+        obj.draw()
+
+        if obj.check0 then
+            obj.setfont("OCR-B-Digits",u*7,0,col)
+            obj.load(codes:sub(1,1))
+            obj.draw(-w/2+u*(10-3.5), h/2-u*3.5)
+            for i=2,7 do
+                obj.load(codes:sub(i,i))
+                obj.draw(-w/2+u*(15+3.5+7*(i-2)), h/2-u*3.5)
+            end
+
+            for i=8,13 do
+                obj.load(codes:sub(i,i))
+                obj.draw(-w/2+u*(62+3.5+7*(i-8)), h/2-u*3.5)
+            end
+        end
+    else
+        obj.setfont("メイリオ",50)
+        local msg = "codesには13文字の数列を設定してください"
+        obj.load(msg)
+    end
+else
+    if #codes==8 and tonumber(codes) then
+        local w = u*69
+        -- obj.setoption("dst","obj")
+        f.drawBase(w, h, bgcol)
+        obj.draw()
+
+        ------ generate patterns ------
+        local L_bars = ""
+        local R_bars = ""
+
+        -- left pattern
+        for i=1,4 do
+            L_bars = L_bars..f.JAN.left.odd[tonumber(codes:sub(i,i))+1]
+        end
+
+        -- right pattern
+        for i=5,8 do
+            R_bars = R_bars..f.JAN.right[tonumber(codes:sub(i,i))+1]
+        end
+
+        ------ draw patterns & bars ------
+        local dh = obj.check0 and u*7 or 0
+        f.drawCode(0,0,     h,      u,  "01010",5, col)
+        f.drawCode(u*4,0,   h-dh,   u,  L_bars, 7, col)
+        f.drawCode(u*32,0,  h,      u,  "01010",5, col)
+        f.drawCode(u*37,0,  h-dh,   u,  R_bars, 7, col)
+        f.drawCode(u*64,0,  h,      u,  "0101", 4, col)
+
+        obj.draw()
+        
+        if obj.check0 then
+            obj.setfont("OCR-B-Digits",u*7,0,col)
+            for i=1,4 do
+                obj.load(codes:sub(i,i))
+                obj.draw(-w/2+u*(4+3.5+7*(i-1)), h/2-u*3.5)
+            end
+
+            for i=5,8 do
+                obj.load(codes:sub(i,i))
+                obj.draw(-w/2+u*(37+3.5+7*(i-5)), h/2-u*3.5)
+            end
+        end
+    else
+        obj.setfont("メイリオ",50)
+        local msg = "codesには8文字の数列を設定してください"
+        obj.load(msg)
+    end
+end

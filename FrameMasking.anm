@@ -1,0 +1,22 @@
+--check0:逆,0
+--dialog:layer,local layer=obj.layer;エフェクトを有効/chk,local isEffect=1;
+
+local l=layer
+local function g(layer,prm)
+	return obj.getvalue("layer"..layer.."."..prm)
+end
+
+-- obj.copybuffer("tmp","frm")
+if type(l)~="table" then
+	l = {l}
+end
+
+for i=1,#l
+	local lm=l[i]
+	obj.setoption("dst","tmp")
+	obj.load("layer",lm,isEffect)
+	-- obj.setoption("blend","alpha_sub")
+	obj.draw(g(lm,"x"),g(lm,"y"),g(lm,"z"),g(lm,"zoom"),g(lm,"alpha"),g(lm,"rx"),g(lm,"ry"),g(lm,"rz"))
+end
+
+obj.setoption("dst","tmp")

@@ -1,0 +1,44 @@
+@Masking
+--track0:From,0,100,0,1
+--track1:X,-2000,2000,0
+--track2:Y,-2000,2000,0
+--track3:Alpha(%),0,100,0
+
+local isExist=false
+local bn="IM"
+require("rikky_module")
+if rikky_module then
+	rikky_module.image("w",)
+else
+
+end
+
+if not isExist then
+	obj.setfont("メイリオ",30)
+	obj.load("イメージが保存されていません。")
+else
+end
+
+@SaveBuffer
+--track0:To,0,100,0,1
+
+local bn="IM"
+local i=obj.index
+IM = IM or {}
+IM[obj.layer] = {
+	n=obj.num,
+	coor={}
+}
+
+local save,read
+require("rikky_module")
+if rikky_module then
+	save,read=
+		function(s) return rikky_module.image("w+",s) end,
+		function(s) return rikky_module.image("r+",s) end
+else
+	save,read=
+		function(s) return obj.copybuffer("cache:"..s,"obj") end,
+		function(s) return obj.copybuffer("obj","cache:"..s) end
+end
+

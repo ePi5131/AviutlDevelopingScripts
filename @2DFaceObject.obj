@@ -6,105 +6,147 @@
 --track2:ハイライト方向,-180,180,60
 --track3:全体size,0,500,250,1
 --check0:保存する,0
---dialog:color/col,local color=0xffffff;瞳孔縦横比%,local eyeAsept=30;ﾊｲﾗｲﾄ縦横比%,local highAsept=40;ﾊｲﾗｲﾄ半径,local hlR=70;
+--dialog:color/col,local color=0xffffff;瞳孔縦横比%,local eyeAsept=30;ﾊｲﾗｲﾄ縦横比%,local highAsept=40;ﾊｲﾗｲﾄ半径,local hlR=70;ﾊｲﾗｲﾄ追従固定/chk,local isLockHighlights=1;虹彩円形範囲角度,local irisAng=160;虹彩円形配置数,local irisNum=10;
 
 require("rikky_module")
+--[[以下rikky_module判定構文(rikky_moduleの使い方.txtより引用)]]
+if rikky_module == nil then
+	debug_print("rikky_module was not found in function'reuire'.")
+	local CPATH = {}
+	local cpath = package.cpath .. ";"
+	local n
+	while(1)do
+		n = cpath:find(";")
+		if n then
+			CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+			cpath = cpath:sub(n + 1, #cpath)
+		else
+			break
+		end
+	end
+	if not CPATH[2]:find("script\\?.dll") then
+		CPATH[3]=CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+		package.cpath = package.cpath .. ";" .. CPATH[3]
+	end
+	for i=1,#CPATH do
+		local f=io.open(CPATH[i]:gsub("?", "rikky_module"),"rb")
+		if f then
+			require("rikky_module")
+			f:close()
+			break
+		end
+	end
+end
 
-local save=obj.check0
-local s=obj.track3
-local af=s/250
-local ps=obj.track0
-local hl=obj.track1/100
-local hlAng=obj.track2
+--nil判定
+color,eyeAsept,highAsept,hlR,irisNum,irisAng=
+	color 		or 0xffffff,
+	eyeAsept 	or 30,
+	highAsept 	or 40,
+	hlR 		or 70,
+	irisNum 	or 10,
+	irisAng 	or 160
+
+local isSave,ps,hl,hlAng,size=obj.check0,obj.track0,obj.track1/100,obj.track2,obj.track3
+local s,af=size,size/250
 local col=0xffffff
 local l="layer"..obj.layer
 local img="FO:"..obj.layer
-local i
-local ang=0.15
-local n=20
 local tmp={x=0,y=0,t=0}
 local r=60*af
 local ox,oy,oz=obj.getvalue("x"),obj.getvalue("y"),obj.getvalue("z")
+local ahlAng=isLockHighlights==0 and hlAng*-1+90 or 0
+local i
 
 local ch=function(c)
 	if(c>0) then c=0 end
 	return c
 end
-local sin,cos=function(n) return math.sin(math.rad(n)) end,function(n) return math.cos(math.rad(n)) end
+local sin,cos=
+	function(n) return math.sin(math.rad(n)) end,
+	function(n) return math.cos(math.rad(n)) end
+local save,read,clear=
+	function(s) if rikky_module then rikky_module.image("w",s) else obj.copybuffer("cache:"..s,"obj") end 	end,
+	function(s) if rikky_module then rikky_module.image("r",s) else obj.copybuffer("obj","cache:"..s) end 	end,
+	function(s) if rikky_module then rikky_module.image("c",s) end 											end --copybufferでのクリア方法分からないです....
 
 
 
---描画
+--[[描画]]
+
+--目のベース
 obj.load("figure","円",0x0b0b0b,s+50,10)
 obj.setoption("dst","tmp",s+50,s+50)
 obj.draw()
 
+--グラデーション
 obj.load("figure","円",0x0b0b0b,s)
 obj.setoption("blend",0)
-obj.effect("グラデーション","角度",180,"幅",s+90,"中心Y",30,"color",0xffffff,"color2",0x000000)
+obj.effect("グラデーション","角度",ahlAng-180,"幅",s+90,"中心Y",30,"color",0xffffff,"color2",0x000000)
 obj.draw()
 
-
-obj.load("figure","円",0x47413d,200*af) --ハイライト
+--ハイライト(下地)
+obj.load("figure","円",0x47413d,200*af)
 obj.effect("マスク","Y",100*af,"サイズ",s,"縦横比",-20,"type",1)
 obj.setoption("blend",4)
-obj.draw(0,0,0,1,hl)
+obj.draw(0,0,0,1,hl,0,0,ahlAng)
 
-
-obj.load("figure","円",col,100*af) --ハイライト
+--ハイライト(虹彩映り込み)
+obj.load("figure","円",col,100*af) 
 obj.effect("マスク","Y",100*af,"サイズ",s,"縦横比",-20,"type",1)
 obj.effect("マスク","Y",0,"サイズ",100*af,"縦横比",-30,"type",1,"マスクの反転",1)
 obj.setoption("blend",4)
-obj.draw(0,s/8,0,1,hl)
+obj.draw(0,s/8+sin(ahlAng),0,1,hl,0,0,ahlAng)
 
-
+--瞳孔エフェクト
 obj.load("figure","円",0x47413d,230*af,5)
 obj.setoption("blend",4)
 obj.draw(0,0,0)
 
-
-obj.load("figure","円",0x000000,ps*af) --瞳孔
+--瞳孔
+obj.load("figure","円",0x000000,ps*af) 
 obj.setoption("blend",0)
 obj.effect("リサイズ","X",100-eyeAsept)
 obj.effect("グラデーション","角度",0,"幅",200,"color",0x000000,"color2",0x585858)
 obj.draw()
 
-
+--虹彩
 obj.load("figure","四角形",0x000000,20*af)
 obj.effect("リサイズ","X",30)
 obj.setoption("blend",5)
-for i=0,n do
-	tmp.t=i/n*math.pi*2+ang
-	tmp.x=math.cos(tmp.t)*r
-	tmp.y=math.sin(tmp.t)*r
-	if(i<10) then
-		obj.draw(tmp.x, 20*af+tmp.y, 0, 1,1,0,0,360/n*i+90+7.5)
-	end
+for i=0,irisNum do 
+	tmp.t=(irisAng/irisNum*i+(180-irisAng)/2)
+	tmp.x=cos(tmp.t)*r
+	tmp.y=sin(tmp.t)*r
+	obj.draw(tmp.x, 20*af+tmp.y, 0, 1,1,0,0,tmp.t+90)
 end
 
-
-obj.setoption("blend",0)
-obj.load("figure","円",0xf6efec,50*af) --ハイライト
+--ハイライト(光源反射(のつもり))
+obj.setoption("blend",1)
+obj.load("figure","円",0xf6efec,50*af) 
 obj.effect("リサイズ","X",100-highAsept)
+-- obj.effect("ぼかし","範囲",10)
 obj.draw(cos(hlAng)*hlR*af,sin(hlAng)*-1*hlR*af,0,1,0.4*hl,0,0,hlAng*-1)
+obj.setoption("blend",0)
 
+--全体描画
 obj.load("tempbuffer")
 obj.effect("単色化","color",color,"輝度を保持する",1)
 obj.draw(ox,oy,oz)
-rikky_module.image("w",img)
+save(img)
 FO=FO or {}
 if(type(FO[l])~="table") then FO[l]={} end
-if(save) then
+if(isSave) then
 	FO[l]={id=img,isOutput=true}
 	obj.alpha=0
-elseif(save==0) then
+elseif(isSave==0) then
 	FO[l]={id=false,isOutput=false}
 	obj.alpha=1
-	rikky_module.image("c",img)
+	clear(img)
 end
 
 --tmp2=FO[l]["id"]
---tmp=save
+--tmp=isSave
 
 
 
@@ -116,9 +158,45 @@ end
 --track2:まぶた度合,0,100,100
 --track3:size,0,2000,800,1
 --check0:読み込み,0
---dialog:color/col,local col=0xffffff;inside,local ins=obj.layer-1;瞼ぼかし,local blur=0;眉X,local brx=0;眉Y,local bry=0;眉の高さ比率,local brasp=30;眉回転,local brang=0;目頭/chk,local inceye=1;
+--dialog:color/col,local col=0xffffff;inside,local ins=obj.layer-1;瞼ぼかし,local blur=0;眉X,local brx=0;眉Y,local bry=0;眉の高さ比率,local brasp=30;眉回転,local brang=0;目頭/chk,local inceye=1;左右反転/chk,local isFlip=0;
 
 require("rikky_module")
+--[[以下rikky_module判定構文(rikky_moduleの使い方.txtより引用)]]
+if rikky_module == nil then
+	local CPATH = {}
+	local cpath = package.cpath .. ";"
+	local n
+	while(1)do
+		n = cpath:find(";")
+		if n then
+			CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+			cpath = cpath:sub(n + 1, #cpath)
+		else
+			break
+		end
+	end
+	if not CPATH[2]:find("script\\?.dll") then
+		CPATH[3]=CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+		package.cpath = package.cpath .. ";" .. CPATH[3]
+	end
+	for i=1,#CPATH do
+		local f=io.open(CPATH[i]:gsub("?", "rikky_module"),"rb")
+		if f then
+			require("rikky_module")
+			f:close()
+			break
+		end
+	end
+end
+
+--nil判定
+col,blur,brx,bry,brasp,brang=
+	col 	or 0xffffff,
+	blur 	or 0,
+	brx 	or 0,
+	bry 	or 0,
+	brasp 	or 30,
+	brang 	or 0
 
 local ox,oy,oz=obj.getvalue("x"),obj.getvalue("y")+100,obj.getvalue("z")
 local s=obj.track3
@@ -134,95 +212,127 @@ if(type(ins)=="string") and (ins=="d") then
 else
 	l="layer"..ins
 end
+local s2
+local save,read,clear=
+	function(s) if rikky_module then rikky_module.image("w",s) else obj.copybuffer("cache:"..s,"obj") end 	end,
+	function(s) if rikky_module then rikky_module.image("r",s) else obj.copybuffer("obj","cache:"..s) end 	end,
+	function(s) if rikky_module then rikky_module.image("c",s) end 											end --copybufferでのクリア方法分からないです....
 
 coltmp.t1[1],coltmp.t1[2],coltmp.t1[3]=HSV(col)
 local FOimg="FO:tmp"
+local FOmain="FO:main"
 local FOtmp="FO:eyes"
+
 
 --描画
 if((FO) and (type(FO[l])=="table") and (type(FO[l]["id"])=="number") and (FO[l]["isOutput"])) or (obj.check0) then
-
-obj.setoption("dst","tmp",s*3,s*3)
-coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x8b8b8b)
-coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
-obj.load("figure","円",coltmp.t3,s)
-obj.effect("リサイズ","Y",70*puaf)
-obj.effect("マスク","Y",-100*af,"サイズ",s,"type",1,"縦横比",-30)
-obj.effect("斜めクリッピング","角度",-10,"ぼかし",blur)
-obj.draw(ox,oy,oz)
-
-obj.setoption("dst","tmp")
-coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x3b3b3b)
-coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
-obj.load("figure","円",coltmp.t3,750*af)
-obj.effect("リサイズ","Y",70*puaf)
-obj.effect("マスク","Y",-100*af,"サイズ",750*af,"type",1,"縦横比",-30)
-obj.effect("斜めクリッピング","角度",-8,"ぼかし",blur)
-obj.draw(ox,oy,oz)
-
-obj.setoption("dst","tmp")
-coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0xffffff)
-coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
-obj.load("figure","円",coltmp.t3,700*af)
-obj.effect("リサイズ","Y",70*puaf)
-obj.effect("マスク","Y",-100*af,"サイズ",700*af,"type",1,"縦横比",-30)
-obj.effect("グラデーション","中心Y",-50*af,"幅",1000*af,"color",0xffffff,"color2",0xd7d7d7,"type",1)
-obj.draw(ox,oy,oz)
-obj.load("tempbuffer")
-obj.draw()
-rikky_module.image("w",FOimg)
-
-
-if(FO) and (type(FO[l])=="table") and (FO[l]["isOutput"]) then --瞳描画
-	obj.setoption("dst","tmp",s*2,s*2)
-	rikky_module.image("r",FO[l]["id"])
-	obj.draw(pux,puy)
-
-	obj.setoption("dst","tmp")
-	rikky_module.image("r",FOimg)
-	obj.effect("反転","透明度反転",1)
-	obj.setoption("blend","alpha_sub")
+	--　白目
+	obj.setoption("dst","tmp",s*3,s*3)
+	coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0xffffff)
+	coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
+	obj.load("figure","円",coltmp.t3,700*af)
+	obj.effect("リサイズ","Y",70*puaf)
+	obj.effect("マスク","Y",-100*af,"サイズ",700*af,"type",1,"縦横比",-30)
+	obj.effect("グラデーション","中心Y",-50*af,"幅",1000*af,"color",0xffffff,"color2",0xd7d7d7,"type",1)
 	obj.draw(ox,oy,oz)
-
 	obj.load("tempbuffer")
 	obj.draw()
-	rikky_module.image("w",FOtmp)
-end
+	save(FOmain)
 
---obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
-rikky_module.image("r",FOimg)
-obj.draw()
+	-- 瞼(陰)
+	obj.setoption("dst","tmp")
+	coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x8b8b8b)
+	coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
+	obj.load("figure","円",coltmp.t3,s)
+	obj.effect("リサイズ","Y",70*puaf)
+	obj.effect("マスク","Y",-100*af,"サイズ",s,"type",1,"縦横比",-30)
+	obj.effect("斜めクリッピング","角度",-10,"ぼかし",blur)
+	obj.draw(ox,oy,oz)
 
-coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x6d6e6e)
-coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
-obj.load("figure","円",coltmp.t3,s)
-obj.setoption("dst","frm")
-obj.effect("リサイズ","Y",100-brasp)
-obj.effect("マスク","X",30*af,"Y",50*af,"サイズ",850*af,"type",1,"縦横比",brasp*-1,"マスクの反転",1)
-obj.draw(ox-25*af+brx,oy+bry-100*af,oz,1.2,1,0,0,10+brang)
+	-- 瞼
+	obj.setoption("dst","tmp")
+	coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x3b3b3b)
+	coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
+	obj.load("figure","円",coltmp.t3,750*af)
+	obj.effect("リサイズ","Y",70*puaf)
+	obj.effect("マスク","Y",-100*af,"サイズ",750*af,"type",1,"縦横比",-30)
+	obj.effect("斜めクリッピング","角度",-8,"ぼかし",blur)
+	obj.draw(ox,oy,oz)
 
-coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x4c4c4c)
-coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
-obj.load("figure","円",coltmp.t3,s)
-obj.effect("リサイズ","Y",100-brasp)
-obj.effect("マスク","X",30*af,"Y",10*af,"サイズ",850*af,"type",1,"縦横比",brasp*-1,"マスクの反転",1)
-obj.draw(ox-25*af+brx,oy+bry-40*af,oz,1.2,1,0,0,10+brang)
+	obj.setoption("dst","tmp")
+	read(FOmain)
+	-- obj.draw(ox,oy,oz)
+	obj.draw()
 
-rikky_module.image("r",FOtmp)
-obj.draw()
 
---rikky_module.image("c",FOtmp)
---rikky_module.image("c",FOimg)
---obj.load("tempbuffer")
---obj.draw()
+	obj.load("tempbuffer")
+	save(FOimg)
 
-if(inceye==1) then
-	obj.load("figure","四角形",0xce97a8,30*af)
-	obj.effect("リサイズ","Y",70)
-	obj.draw(ox+330*puuf+360*puaf,oy-100+110*puuf+60*puaf,oz,1,1,0,0,15)
-end
+	s2=s*2<=2000 and s*2 or 2000
+	if(FO) and (type(FO[l])=="table") and (FO[l]["isOutput"]) then --瞳描画
+		-- 瞳を読み込み
+		obj.setoption("dst","tmp",s2,s2)
+		read(FO[l]["id"])
+		obj.draw(pux,puy)
+
+		-- 白目との差分
+		obj.setoption("dst","tmp")
+		read(FOmain)
+		obj.effect("反転","透明度反転",1)
+		obj.setoption("blend","alpha_sub")
+		obj.draw()
+
+		obj.load("tempbuffer")
+		save(FOtmp)
+	end
+
+	--　瞳と白目の画像を合成
+	read(FOimg)
+	obj.copybuffer("tmp","obj")
+	obj.setoption("dst","tmp")
+	obj.setoption("blend","0")
+	read(FOtmp)
+	obj.draw()
+	obj.load("tempbuffer")
+	save(FOimg)
+
+	-- 眉(細)
+	coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x6d6e6e)
+	coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
+	obj.setoption("dst","tmp")
+	obj.load("figure","円",coltmp.t3,s)
+	obj.effect("リサイズ","Y",100-brasp)
+	obj.effect("マスク","X",30*af,"Y",50*af,"サイズ",850*af,"type",1,"縦横比",brasp*-1,"マスクの反転",1)
+	obj.draw(ox-25*af+brx,oy+bry-100*af,oz,1.2,1,0,0,10+brang)
+
+	--　眉
+	coltmp.t2[1],coltmp.t2[2],coltmp.t2[3]=HSV(0x4c4c4c)
+	coltmp.t3=HSV(coltmp.t1[1],coltmp.t1[2],coltmp.t2[3])
+	obj.load("figure","円",coltmp.t3,s)
+	obj.effect("リサイズ","Y",100-brasp)
+	obj.effect("マスク","X",30*af,"Y",10*af,"サイズ",850*af,"type",1,"縦横比",brasp*-1,"マスクの反転",1)
+	obj.draw(ox-25*af+brx,oy+bry-40*af,oz,1.2,1,0,0,10+brang)
+
+	read(FOimg)
+	obj.draw()
+
+	if(inceye==1) then
+		--目頭
+		obj.load("figure","四角形",0xce97a8,30*af)
+		obj.effect("リサイズ","Y",70)
+		obj.draw((ox+330*puuf+360*puaf)*af,(oy-100+110*puuf+60*puaf)*af,oz,1,1,0,0,15)
+	end
+
+	--合成&表示
+	obj.load("tempbuffer")
+	if isFlip==1 then obj.effect("反転","左右反転",1) obj.draw(ox,oy) else obj.draw() end
+	clear(FOtmp)
+	clear(FOimg)
+	clear(FOmain)
+	-- clear(FO[l]["id"])
 
 else
+	--エラー判定
 	obj.setfont("メイリオ",40)
 	obj.load("設定されたinside欄が無効です。\nレイヤーの直前にinsideが設定されているか、\n設定したレイヤー数にinsideが設定されているか確認してください。")
 	obj.draw()

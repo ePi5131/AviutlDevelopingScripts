@@ -1,0 +1,63 @@
+--track0:縦,1,18,9,1
+--track1:横,1,10,5,1
+--track2:順,1,5,5,1
+--track3:ずれ度,0,300,50
+--dialog:;
+
+require("rikky_module")
+
+local w,h,o,d=obj.track0,obj.track1,obj.track2,obj.track3
+local sw,sh=obj.getpixel()
+local t,at=obj.frame,obj.totalframe
+local l,n,i=obj.layer,math.max(w,h),obj.index
+local bname="DS_"..l.."_"
+
+local s,r,c=
+	function(n) rikky_module.image("s",n) end,
+	function(n) rikky_module.image("r",n) end,
+	function(n) rikky_module.image("c",n) end
+
+local log=function(s) if obj.getinfo("saving")==false then debug_print(s) end end
+
+local ordering=function(t,dw,dh,w,h,o)
+	local n=math.max(w,h)
+	if 		o==1 then
+		return math.floor(math.abs(dw-w/2)+1)
+	elseif 	o==2 then
+		return math.floor(math.abs(dh-h/2)+1)
+	elseif 	o==3 then
+		return 
+	elseif 	o==4 then
+	else
+	end
+end
+
+----------------------------------------------
+s(bname..(t%n+1))
+log((t%n+1))
+local g
+obj.setfont("メイリオ",20,0,0xffffff)
+for i=1,w do
+	for j=1,h do
+		g=ordering(t,i,j,w,h,o)
+		-- log("i(w):"..i..", j(h):"..j.."; g:"..g)
+		r(bname..g)
+		obj.effect("クリッピング",
+			"上",sh/h*(j-1),
+			"下",sh/h*(j-1),
+			"右",sw/w*(i-1),
+			"左",sw/w*(i-1)
+			)
+		-- obj.effect("単色化","color",0xff0000,"強さ",g*10,"輝度を保持する",0)
+		obj.draw()
+		-- obj.load("i(w):"..i..", j(h):"..j..";")
+		-- obj.draw(sw/w*(i-1)-sw/2,sh/h*(j-1)-sh/2)
+	end
+end
+
+
+if t==at then 
+	for i=1,n do
+		c(bname..i)
+	end
+end

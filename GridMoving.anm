@@ -1,0 +1,12 @@
+
+--track0:X,-100,100,0,1
+--track1:Y,-100,100,0,1
+--track2:Z,-100,100,0,1
+--track3:unit,0,2000,500,0.01
+
+local x,y,z = obj.track0, obj.track1, obj.track2
+local u = obj.track3
+
+obj.ox = obj.ox+x*u
+obj.oy = obj.oy+y*u
+obj.oz = obj.oz+z*u

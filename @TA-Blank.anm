@@ -1,0 +1,207 @@
+
+---------------------------------------------------------------------
+@Blank
+---------------------------------------------------------------------
+--[[
+- horizontal
+- vertical
+- sizefixed
+- af
+]]
+
+
+---------------------------------------------------------------------
+@Blank(Option)
+---------------------------------------------------------------------
+
+---------------------------------------------------------------------
+@Randamize
+---------------------------------------------------------------------
+--[[
+- horizontal
+- vertical
+- sizefixed
+- af
+- Pseudorandomize
+]]
+
+---------------------------------------------------------------------
+@Randamize(Option)
+---------------------------------------------------------------------
+
+
+---------------------------------------------------------------------
+@AutoBlankRepeat(2D)
+---------------------------------------------------------------------
+--track0:width,0,2000,500
+--track1:height,0,2000,500
+--track2:dw,1,100,3,1
+--track3:dh,1,100,1,1
+
+local w,h,dw,dh = obj.track0,obj.track1,obj.track2,obj.track3
+
+-- if obj.num==1 then
+	for i=0,dw-1 do
+		for j=0,dh-1 do
+			local x,y = 
+				dw>1 and (1/(dw-1)*i-0.5)*w or 0,
+				dh>1 and (1/(dh-1)*j-0.5)*h or 0
+			obj.draw(x,y)
+		end
+	end
+-- else
+-- 	local i,j=obj.index+1,obj.index%dw+1
+-- 	obj.ox = (1/(obj.num/dw)*i-0.5)*w +obj.ox
+-- 	--obj.oy = (1/(dh-1)*j-0.5)*h +obj.oy
+-- end
+
+---------------------------------------------------------------------
+@AutoBlankRepeat(3D)
+---------------------------------------------------------------------
+
+---------------------------------------------------------------------
+@Hiding(ability of option)
+---------------------------------------------------------------------
+--track0:Order,0,5,0,1
+--track1:Pattern,-41,3,3,1
+--track2:dAF(%),0,100,25
+--track3:AF(%),0,100,0
+--check0:toOption,0
+--dialog:RandomConst/chk,local isConst=1;displayInfo/chk,local isInfo=0;Seed,local seed=777;
+local od,pt,daf,af = obj.track0,obj.track1,obj.track2/100,obj.track3/100
+
+
+local function Hiding(s,af,daf,pt,od,i,j)
+	local E = require("easing")
+	local easelist = {
+		"linear",                                               -- 1
+		"inSine",   "outSine",   "inOutSine",   "outInSine",    -- 2,3,4,5
+		"inQuad",   "outQuad",   "inOutQuad",   "outInQuad",    -- 6,7,8,9
+		"inCubic",  "outCubic",  "inOutCubic",  "outInCubic",   -- 10,11,12,13
+		"inQuart",  "outQuart",  "inOutQuart",  "outInQuart",   -- 14,15,16,17
+		"inQuint",  "outQuint",  "inOutQuint",  "outInQuint",   -- 18,19,20,21
+		"inExpo",   "outExpo",   "inOutExpo",   "outInExpo",    -- 22,23,24,25
+		"inCirc",   "outCirc",   "inOutCirc",   "outInCirc",    -- 26,27,28,29
+		"inElastic","outElastic","inOutElastic","outInElastic", -- 30,31,32,33
+		"inBack",   "outBack",   "inOutBack",   "outInBack",    -- 34,35,36,37
+		"inBounce", "outBounce", "inOutBounce", "outInBounce"   -- 28,39,40,41
+	}
+	local function easing(x)
+		return E[easelist[math.abs(pt)]](x,0,1,1)
+	end
+
+	local function Order(t,i,j)
+		if 		t == 1 then
+		elseif	t == 2 then
+		elseif	t == 2 then
+	end
+
+	local function RangeApply(a, b)
+		return b-a<0 and 0 or (b-a>1 and 1 or b-a)
+	end
+
+
+	if pt<0 then
+
+	else
+		if 		pt == 1 then
+			return s and () or 1
+		elseif 	pt == 2 then
+		elseif 	pt == 3 then
+		else
+			return s and 0 or 1
+		end
+		fade = math.abs(fade)
+		if alp>0.00000001 then
+			if(fade==1) then
+				obj.alpha = obj.alpha*(1-alp)          --�ʏ�t�F�[�h
+			elseif (fade==2) then 
+				obj.alpha=obj.alpha*(frame%2)          --�_��
+			elseif (fade==3) then
+				obj.alpha=obj.alpha*(frame%2)*(1-alp)  --�_�� * �ʏ�t�F�[�h
+			end
+		end
+
+		if (fade==4) then --��������: �ʏ�o�� by Aodaruma
+			obj.alpha = IO==1 and 0 or 1
+		end
+	end
+end
+
+if obj.check0 then
+	TB = TB or {}
+	TB.Hiding = TB.Hiding or Hiding
+	TB[obj.layer] = {
+		order 	= od,
+		pattern = pt,
+		daf 	= daf,
+		af 		= af,
+
+		seed 	= seed,
+		isConst = isConst
+	}
+else
+	local n,i = obj.num,obj.index
+	local aaf = 1/n
+	local IO = aaf * i
+	obj.alpha = Hiding(IO<af, af, pt)
+end
+
+
+
+---------------------------------------------------------------------
+@StretchSpace
+---------------------------------------------------------------------
+--track0:width,0,2000,1000
+--track1:height,0,2000,1000
+--check0:ShowFrame,0
+
+local w,h= obj.track0,obj.track1
+
+require("rikky_module") --��O�߂�ǂ�
+local tx = rikky_module.getinfo("text")
+local f,i,j
+local sep = "\n"
+local m,n = 0,0
+local tb={}
+for field,s in string.gmatch(tx, "([^"..sep.."]*)("..sep.."?)") do
+	table.insert(tb,#field)
+	if  s=="" then break end
+end
+
+for i=1,#tb do
+	m = m + tb[i]-1
+	obj.oy = (1/(#tb-1)*(i-1)-0.5)*h
+	if obj.index<m then
+		if i == #tb then
+			f=tb[i]+1;	j=obj.index-(m-(tb[i]-1))
+		else
+			f=tb[i];	j=obj.index-(m-(tb[i]-1))
+		end; break
+	elseif obj.index+1==obj.num then
+		f=tb[i]+1;		j=obj.index-(m-(tb[i]-1))
+	end
+end
+obj.ox = w*(1/(f-2)*j -0.5)
+
+if obj.check0 and obj.index==0 then
+	local type, table = rikky_module.getinfo("object")
+	local w,h = w+obj.w*2,h+obj.h*4
+	local col,dw,dh = 0xffffff,w/2,h/2
+	if (type == "�}�`" or type == "�e�L�X�g") and table.color then
+		col = table.color
+	end
+
+	
+	obj.draw()
+	obj.setoption("dst","tmp",w,h)
+	obj.load("figure","�l�p�`",col,1)
+	obj.drawpoly(-dw,-dh,0,dw,-dh,0,dw,dh,0,-dw,dh,0)
+	obj.setoption("blend","alpha_sub")
+	dw,dh = dw-3,dh-3
+	obj.drawpoly(-dw,-dh,0,dw,-dh,0,dw,dh,0,-dw,dh,0)
+	obj.setoption("dst","frm")
+	obj.load("tempbuffer")
+	obj.draw()
+
+end

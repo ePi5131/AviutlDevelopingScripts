@@ -1,0 +1,113 @@
+@TextEffect
+--track0:Range,1,100,1,1
+--track2:zoom(%),-200,300,100
+--track3:AF(%),0,100,100
+--dialog:特定のfontを使う/chk,local isUsingFont=0;└ font($),local font="";エフェクトを使う/chk,local isUsingEffect=0;└ Effect($),local effect="";└ 項目名01,local item01="";└ 項目値01,local num01=;└ 項目名02,local item02="";└ 項目値02,local num02=;└ 項目名03,local item03="";└ 項目値03,local num03=;└ 項目名04,local item04="";└ 項目値04,local num04=;
+
+require("rikky_module")
+if rikky_module == nil then
+	local CPATH = {}
+	local cpath = package.cpath .. ";"
+	local n
+	while(1)do
+		n = cpath:find(";")
+		if n then
+			CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+			cpath = cpath:sub(n + 1, #cpath)
+		else
+			break
+		end
+	end
+	if not CPATH[2]:find("script\\?.dll") then
+		CPATH[3] = CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+		package.cpath = package.cpath .. ";" .. CPATH[3]
+	end
+	for i = 1, #CPATH do
+		local f = io.open(CPATH[i]:gsub("?", "rikky_module"), "rb")
+		if f then
+			require("rikky_module")
+			f:close()
+			break
+		end
+	end
+end
+
+-- if rikky_module then
+	local effect={
+		"クリッピング",
+		"ぼかし",
+		"境界ぼかし",
+		"モザイク",
+		"発光",
+		"閃光",
+		"拡散光",
+		"グロー",
+		"ライト",
+		"シャドー",
+		"縁取り",
+		"凸エッジ",
+		"エッジ抽出",
+		"シャープ",
+		"マスク",
+		"斜めクリッピング",
+		"放射ブラー",
+		"方向ブラー",
+		"レンズブラー",
+		"座標",
+		"拡大率",
+		"透明度",
+		"回転",
+		"領域拡張",
+		"リサイズ",
+		"反転",
+		"振動",
+		"ミラー",
+		"ラスター",
+		"波紋",
+		"画像ループ",
+		"極座標変換",
+		"ノイズ",
+		"色ずれ",
+		"単色化",
+		"グラデーション"
+	}
+	-- if rikky_module then
+	-- 	rikky_module.font(2)
+	-- 	rikky_module.list(4, effects)
+	-- end
+	----------------------
+	local index,indexnum,x	= obj.track0, obj.track1, obj.index+1
+	local zoom,af 			= obj.track2/100, obj.track3/100
+
+	local items={}
+	-- TE = x==1 and "" or TE
+	if item01 and num01 then
+		table.insert(items,item01)
+		table.insert(items,num01*af)
+	end
+
+	if item02 and num02 then
+		table.insert(items,item02)
+		table.insert(items,num02*af)
+	end
+
+	if item03 and num03 then
+		table.insert(items,item03)
+		table.insert(items,num03*af)
+	end
+
+	if item04 and num04 then
+		table.insert(items,item04)
+		table.insert(items,num04*af)
+	end
+
+	if x>=index and x=<index+indexnum then
+		obj.zoom = obj.zoom*zoom*af + obj.zoom*(1-af)
+		if isUsingEffect and effect then
+			obj.effect(effect,unpack(items))
+		end
+	end
+-- else
+-- 	obj.setfont("メイリオ",30)
+-- 	obj.load("rikky_moduleが認識されませんでした。\nmoduleを導入するか、位置を確認してください。")
+-- end

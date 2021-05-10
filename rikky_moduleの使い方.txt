@@ -7,10 +7,15 @@
 0.99i6(バージョン表記までなら0.96g)から1.00までです
 拡張編集exedit.aufのバージョンは
 0.89jから0.92までです
-現在(2016/8/13)までの最新版には対応しています
+現在(2016/12/24)までの最新版には対応しています
 ただしAviUtl本体と拡張編集との対応の兼ね合いで拡張編集は0.89l以降が推奨環境です
 ちなみに0.89lとは2011年に発表されたバージョンなので、もう誰も使っていないと思われます
-このdllのバージョンは1.0です
+このdllのバージョンは1.2です
+またdllを使うにはrikky_memory.aufが必要になります。
+aviut.exeと同じ場所に置いてください。
+このプラグインは拙作の他のプラグインとも連携しているので必要になる場合があります。
+使い際にAviUtlでlua51.dll関連でエラーダイアログが出た場合は、
+aviutl.exeとexedit.aufそれぞれに同じ場所にlua51.dllがある必要があるのでコピーなどして環境を整えてください
 
 where_is_rikky_module.dll.exeはお使いのaviutl.exeをドロップするとお使いの環境内になるrikky_module.dllをすべて探して
 最新のものだけを最適な場所に置きなおすものです
@@ -83,7 +88,7 @@ end
 ・ファイル選択 > 134行目参照
 ・フォルダ選択 > 134行目参照
 ・フォント選択 > 134行目参照
-・リスト表示 > 407行目参照
+・リスト表示 > 134行目参照
 ・キーボードの状態 > 221行目参照
 ・マウスの位置取得 > 991行目参照
 ・フォルダの中身取得 > 285行目参照
@@ -129,6 +134,7 @@ end
 ・イメージの輪郭座標抽出 > 1771行目参照
 ・回転変換と直交座標変換 > 1809行目参照
 ・文字列呼び出し > 1898行目参照
+・光源などマテリアル描画 > 行目参照
 ]]
 
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -136,29 +142,19 @@ end
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --[[
 rikky_get.dllとrikky_module.dllはファイル選択やフォント選択を別窓で行い選択をサポートするものです
-"ファイル選択"を使う場合はrikky_get.file関数を使います
-"フォルダ選択"を使う場合はrikky_get.fold関数を使います
-"フォント選択"を使う場合はrikky_get.font関数を使います
-"ﾌｧｲﾙ"を使う場合はrikky_module.file関数を使います
-"ﾌｫﾙﾀﾞ"を使う場合はrikky_module.fold関数を使います
-"ﾌｫﾝﾄ"を使う場合はrikky_module.font関数を使います
+ファイル選択を使う場合はrikky_module.file関数を使います
+フォルダ選択を使う場合はrikky_module.fold関数を使います
+フォント選択を使う場合はrikky_module.font関数を使います
+リスト選択を使う場合はrikky_module.list関数を使います
 どれらも使い方は同じです
-require("rikky_get")またはrequire("rikky_module")でdllをロードします
-次に"ファイル選択"か"フォント選択"を記述した枠の番号を引数にします
-その枠に文字列が入るので""で囲むようにしてください
-文字列が入る枠になにかしらの文字を記入すると、それがトリガーとなって別窓が開きます
+require("rikky_module")でdllをロードします
+次に選択ボタンを作りたい枠の番号を引数にします
 関数の記述場所はどこでも大丈夫ですが、頭の方がいいかと思います
 初めから入力しておくことも可能です
 同じアニメーション効果やカスタムオブジェクトに複数設定できます
-「リアルタイムでプレビューするにチェックが入っていないと反応しません」
-などと今まで書いていましたが
 rikky_module.file、rikky_module.fold、rikky_module.font、rikky_module.listは自動的にリアルタイムビューをオンにするように調節しています
 ほとんどの拡張編集で動作確認してあります。
-rikky_get.dllとrikky_module.dllの違いは"ファイル選択"か"ﾌｧｲﾙ(数字)"の違いです
-文字数を抑えたい場合はrikky_module.dllの方を使ってください
-といいますか、できるだけ、rikky_module.dllの方を使ってください
-またrikky_module.dllはextension.dllとany_key.dllも包括させています
-アスタリスクやドルマークを使った挙動もrikky_module.dllだけ可能です
+アスタリスクを選択する項目の先頭につけると挙動が少し変化します。
 以下具体例を見てください
 ]]--
 
@@ -175,48 +171,20 @@ rikky_module.file(1,3)--1番目と3番目にあるので、項目の名前を"ﾌｧｲﾙ1"、"ﾌｧｲﾙ3"との
 require("rikky_module")
 rikky_module.file(1)--先頭にアスタリスク*をつけるとファイル名だけになります
 --アスタリスクが付けられるのはrikky_module.file関数だけです
---[
-rikky_getの場合は引数をマイナスにするとファイル名だけになります
-require("rikky_get")
-rikky_get.file(-1)
-]]
-
-@例3
---dialog:$ﾌｧｲﾙ1,a="$だけ記入";
-require("rikky_module")
-rikky_module.file(1)--先頭に$(ドルマーク)をつけると$を入力したときのみ反応するようにすることが可能です
 
 @例4
---dialog:$*ﾌｧｲﾙ1,d="$だけを記入";ﾌｫﾙﾀﾞ2,e="";$ﾌｫﾝﾄ3,f="$だけを記入";ﾌｫﾝﾄ4,g="";
+--dialog:*ﾌｧｲﾙ1,d="";ﾌｫﾙﾀﾞ2,e="";ﾌｫﾝﾄ3,f="";ﾌｫﾝﾄ4,g="";
 require("rikky_module")
-rikky_module.file(1)--ドルマークとアスタリスクを同時に使う場合は上記の順番にします
+rikky_module.file(1)
 rikky_module.fold(2)
 rikky_module.font(3,4)
 
 @例5
---dialog:ﾌｫﾝﾄ1,a="";
-local path=obj.getinfo("script_path")
-while(string.sub(path,#path,#path)=="\\") do
-path=string.sub(path,1,#path-1)
-end
-path=path.."\\rikky_module.dll"
-local t=io.open(path,"r")
-if t then
-t:close()
+--dialog:ﾘｽﾄ1,local list="";*ﾘｽﾄ2,local list1=0
 require("rikky_module")
-end
---require関数はrikky_module.dllがないとエラーを吐いて、スクリプト自体がエラーになります
---それを回避するためにこのようにdllがあるかを確かめる方法があります
---冒頭で説明した方法とは別の方法でdllがあるかを確認します
---もしrikky_module.dllがなくともエラーを出すことなくフォントを記入する
---ただしスクリプトと同じ階層にdllがないと意味をなさないです
-
-@例6
---dialog:$*getpath,a="";ﾌｧｲﾙ2,b="";パス,c="";ﾌｫﾙﾀﾞ4,d="";ﾌｫﾙﾀﾞget,e="";font,f="";ﾌｫﾝﾄ7,g="";
-require("rikky_module")
-rikky_module.file(1,"getpath",2,3,"パス")--このように枠の順番の次に枠の名前の文字列を入れると枠の名前を指定できます
-rikky_module.fold(4,5,"ﾌｫﾙﾀﾞget")--rikky_module.foldも同様にできます
-rikky_module.font(6,"font",7)--rikky_module.fontも同様にできます
+rikky_module.list()
+local a={"北","東","南","西"}
+rikky_module.list(1,{"子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"},2,a)--先頭にアスタリスクをつけるとリストの番号が買えるようになります
 
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --キー状態取得について
@@ -252,7 +220,7 @@ RB(マウスの右クリック)
 また引数の最後に"PASSED"を指定すると、リアルタイムでの反応ではなくなります
 ]]
 
-@例7
+@例6
 require("rikky_module")
 a=rikky_module.key(65,13,0x25)--変数aにAキーとエンターキーと左キーの状態が入ります
 --a=rikky_module.key("LB","ENTER","←")--このように文字で指定することも可能です
@@ -299,7 +267,7 @@ rikky_module.dllだと大小関係なく同じものだと判断されます
 第一引数のパスが不適な場合は空のテーブルが返ります
 ]]
 
-@例8
+@例7
 require("rikky_module")
 a=rikky_module.dir("C:\\Aviutl","jpg",".png")
 --Aviutlフォルダにあるjpgファイルとpngファイルがaに入ります
@@ -307,7 +275,7 @@ a=rikky_module.dir("C:\\Aviutl","jpg",".png")
 --入る順番は名前順です
 --1.jpg,2.png,3.JPGがあればa[1]は"C:\\Aviutl\\1.jpg"、a[2]は"C:\\Aviutl\\2.png"だけになります
 
-@例9
+@例8
 require("extension")
 require("rikky_module")
 a=extension.dir("C:\\Aviutl","mp4","MP4")
@@ -317,7 +285,7 @@ b=rikky_module.dir("C:\\Aviutl","mp4")
 --引数を大文字にしても小文字に変換されます
 --拡張子の大小で判別したい場合はextension.dllを使ってください
 
-@例10
+@例9
 --file:
 require("extension")
 for i=#file,1,-1 do
@@ -335,7 +303,7 @@ for i=1,#a do
 	obj.draw(0,i*200)
 end
 
-@例11
+@例10
 --dialog:ﾌｫﾙﾀﾞ1,a=""
 require("rikky_module")
 rikky_module.fold(1)--この関数でフォルダのパスを取得できます
@@ -357,7 +325,7 @@ rikky_module.png("ファイル名")、rikky_module.jpg("ファイル名")のように使います
 戻り値はありません
 ]]
 
-@例12
+@例11
 --check0:保存,0
 --dialog:ファイル名,a="";
 require("rikky_module")
@@ -366,7 +334,7 @@ if obj.check0 then
 	--rikky_module.png("C:\\User\\"..a..".PNG")--保存するフォルダを指定するとそこにできまし、拡張子をつけても画像は出来上がります
 end
 
-@例13
+@例12
 --check0:保存,0
 --dialog:ファイル名,a="";
 a=a..".png"--別の拡張子をつけても自動で後に".jpg"がつきます
@@ -405,50 +373,6 @@ require("rikky_module")
 rikky_module.desk(obj.track0,obj.track1,obj.track2,obj.track3,obj.check0);
 
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---リストダイアログ表示について
---++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---[[
-rikky_module.dllはリストアップもサポートしています
-require("rikky_module")でdllをロードします
-rikky_module.list関数を1回呼び出すと、リストが1つ呼び出されます
-第1引数はリストアップさせたい項目の番号です
-番号は設定ダイアログの上から数えた番号です
-その項目の名前は半角でﾘｽﾄ番号とします
-1番目ならﾘｽﾄ1、16番目ならﾘｽﾄ16とします
-次にリストアップさせたい文字列を入れたテーブル変数を指定します
-基本はこの2つで完了しますが、テーブル変数の次に1を入れると選択された番号が入力欄に入ります
-何もなければリストの文字列がそのまま入ります
-ファイル選択やフォント選択同様$を項目名の先頭につけると$だけが入力されたときにだけ反応するようにできます
-]]
-@例15
---dialog:ﾘｽﾄ1,local list="";$ﾘｽﾄ2,local list1=""
-require("rikky_module")
-rikky_module.list(1,{"子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"})
-local a={"北","東","南","西"}
-rikky_module.list(2,a,1)
-
-@例16
---dialog:$選んで,local list="";$数値選択,local list1=0
-require("rikky_module")
---[[
-リスト項目のテーブルの前に項目名を記述することも可能です
-$をつける場合も関数に記述する項目名には$はつけません
-また文字列でなくてもリストボックスを出すことはできますが
-確実にエラーになります
-$数値選択,local list1="0"
-のように一度文字列でlist1で数値を引き受けてからtonumber関数で数値化する方法をお勧めします
-list1=tonumber(list1)
-if list1==nil then
-list1=0
-end
-これで文字列list1が数値list1になります
-文字列が数値にならない場合はnilになるので、その場合の処理だけすれば問題ないはずです
-]]
-rikky_module.list(1,"選んで",{"子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"})
-local a={"北","東","南","西"}
-rikky_module.list(2,"数値選択",a,1)
-
---++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Aviutlのスクリプト各種情報取得について
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --[[
@@ -467,7 +391,12 @@ version=rikky_module.getinfo("version" [,option])のように使います
 最新のものは0.92、1つ前が0.91cなどの文字列が返ってきます
 ただし未対応の場合は空文字""の文字列が返ってきます
 オプションの数値が2の場合は、このdllのバージョンが返ってきます
-最新のものは1.0です
+オプションの数値が3の場合は、AviUtl本体のバージョンの通し番号が返ってきます。
+1.00が52です
+オプションの数値が4の場合は、拡張編集のバージョンのの通し番号が返ってきます。
+0.92が53です
+オプションの数値が5の場合は、rikky_memory.aufプラグインのバージョンが返ってきます。
+最新のdllは1.2です
 
 "path" > aviutl.exeやexedit.aufのあるバス(場所のフォルダ)が返ってきます
 path=rikky_module.getinfo("path" [,option])のように使います
@@ -647,12 +576,12 @@ groupinfo={
 	Xx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのx成分,
 	Xy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのy成分,
 	Xz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルXのz成分,
-	Yx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのx成分,
-	Yy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのy成分,
-	Yz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルYのz成分,
-	Zx=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのx成分,
-	Zy=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのy成分,
-	Zz=呼び出したオブジェクトに影響するグループ制御のX軸のベクトルZのz成分,
+	Yx=呼び出したオブジェクトに影響するグループ制御のY軸のベクトルYのx成分,
+	Yy=呼び出したオブジェクトに影響するグループ制御のY軸のベクトルYのy成分,
+	Yz=呼び出したオブジェクトに影響するグループ制御のY軸のベクトルYのz成分,
+	Zx=呼び出したオブジェクトに影響するグループ制御のZ軸のベクトルZのx成分,
+	Zy=呼び出したオブジェクトに影響するグループ制御のZ軸のベクトルZのy成分,
+	Zz=呼び出したオブジェクトに影響するグループ制御のZ軸のベクトルZのz成分,
 }
 以上の数値が入っています
 groupinfo.x、groupinfo.y、groupinfo.zは影響するグループ制御の最終的な位置ですので
@@ -666,6 +595,11 @@ groupinfo.Xxなどは直交軸の3方向のベクトルの各成分です
 オブジェクトのX座標を100にしている場合はグループ制御の影響で空間の座標ではX座標は0、Y座標が-100になります
 またgroupinfo.xが100の場合は最終的にオブジェクトの座標はX座標は100、Y座標が-100になります
 正しく取得できなかった場合はnilが返ります
+つまりは描画したい位置がX、Y、Zとした場合は
+x = (groupinfo.Xx * X + groupinfo.Yx * Y + groupinfo.Zx * Z) * groupinfo.zoom + groupinfo.x
+y = (groupinfo.Xy * X + groupinfo.Yy * Y + groupinfo.Zy * Z) * groupinfo.zoom + groupinfo.y
+z = (groupinfo.Xz * X + groupinfo.Yz * Y + groupinfo.Zz * Z) * groupinfo.zoom + groupinfo.z
+とすれば、グループ制御の影響を受けたx、y、zを出すことができます
 ]]
 
 @例26
@@ -711,7 +645,7 @@ luaのtype関数と全く同じですが、違いもあります
 戻り値は文字列で
 number、string、table、function、userdata、thread、nilのいずれかです
 type関数が既にあるのになぜ用意したかといえば
-ごくまれにtpyeに代入されてしまうケースがあり、typeを関数として使えなくなる可能性があるからです
+ごくまれにtpyeを変数として扱っているケースがあり、typeを関数として使えなくなる可能性があるからです
 私の初期のスクリプトにもtype=○○としてしまったものもあります
 typeなんてありふれていて命名したくなるような変数名に大事な関数を割り当てたlua側に問題があると思います
 rikky_module.dllは文字列検索もサポートしています
@@ -1474,17 +1408,22 @@ rikky_module.dllは画像データの一時キャッシュもサポートしています
 require("rikky_module")でdllをロードします
 rikky_module.image関数が使えるようになります
 ゆうきさんのextbufferと役割はほとんど同じです
-第一引数によって、書き、読み、消し、ID検索が決定します
+第一引数によって、書き、読み、消し、ID検索などが決定します
 画像イメージを書き込む場合は"w"にします
 画像イメージを読み込む場合は"r"にします
 画像イメージを書き込んだイメージのデータをメモリから消す場合は"c"にします
 画像イメージを空いているID検索の場合は"g"にします
 画像イメージとイメージを合成する場合は"m"にします
 画像イメージのデータ情報を取得する場合は"i"にします
+画像イメージのデータをコピーする場合は"p"にします
 第二引数にイメージを置いておくID番号の数値を指定します
+*********************************
 extbufferは文字列にも対応していますが、これは数値のみです(ごめんなさい)
 ID番号は0以上の整数を指定します
 マイナスの場合は予期せぬ事態になるので、指定しないようにしましょう
+*********************************
+上のは改良により、できるようになりました
+ID番号はマイナスもプラスもとることができ、文字列でIDを指定することができます
 ID番号1に書き込む場合はrikky_module.image("w",1)のようにします
 空いているIDを取得する場合は
 ID=rikky_module.image("g")
@@ -1495,8 +1434,11 @@ ID=rikky_module.image("g")
 メモリ上のイメージはレイヤやルート関係なく、共有されています
 "m"の合成方法はrikky_module.image("m",後面のID,前面のID,前面のX,前面のY)
 と指定します
+rのときのようにオブジェクトが合成された状後面IDの画像になります。
 後面の左上(0,0)をして前面の位置をXとYで指定します
 pixeldata,w,h=rikky_module.image("i",ID)のように"i"は使います
+コピーはrikky_module.image("p",trg_ID,src_ID)のようにします
+trg_IDはコピーしたイメージを置きたいID,src_IDはコピー元のイメージのIDです
 また"w+"、"r+"、"c+"、"g+"、"m+"、"i+"とプラスをつけると少し変化します
 "w+"の場合は透明度(トラックバーとobj.alphaの積)が反映されて保存されます
 "r+"の場合は呼び出したオブジェクトのobj.oxなどの位置情報で上書きします
@@ -1507,6 +1449,8 @@ pixeldata,w,h=rikky_module.image("i",ID)のように"i"は使います
 pixeldata.A[i]、pixeldata.R[i]、pixeldata.G[i]、pixeldata.B[i]と透明度とRGBになります
 値の範囲はそれぞれ0から255までです
 テーブルの要素の位置のiはi=y*w+x+1で出ます(xは0<=x<w、yは0<=y<hの範囲です)
+"p+"の場合は上書きになる場合はコピーを失敗します
+戻り値を設定していない処理の場合は、成功時にtrueを失敗時にfalseを返します
 ]]
 
 @例30
@@ -1659,6 +1603,7 @@ require("rikky_module")
 obj.setfont("",50)
 --nameが保持している文字列の変数名の変数に123456789を代入する
 rikky_module.assign("make",name,123456789)
+--つまりhensuu=123456789としているのと同じです
 --今回はhensuuに代入するのが目的であり、rikky_module.assign("make")でhennsuuに123456789が代入されたかを確かめる
 obj.load("text",hensuu)
 
@@ -1775,6 +1720,8 @@ obj.load("text",str)
 rikky_module.dllは輪郭抽出もサポートしています
 require("rikky_module")でdllをロードします
 rikky_module.bordering関数を呼び出すと輪郭の位置情報などを返します
+引数なしだと間引くことなく、すべての輪郭情報を返します
+1以上の数値を渡すと、その数の分だけ輪郭情報を間引きます
 b,n,m=rikky_module.bordering()と引数なしで呼び出して使います
 bは輪郭情報が入ったテーブルです
 bはさらに複数のテーブルが入っていて、そのテーブルに輪郭情報が入っています
@@ -1784,12 +1731,9 @@ mはb、ｎのテーブルの数で、要は輪郭の数です
 輪郭が1の場合はmが1になりn[1]にb[1]の位置情報の数が入っています
 b[1]には位置情報がx座標、y座標、x座標...とn[1]の数だけ入っています
 なので、b[1]の数は必ずn[1]の数の2倍になります
-またb[1][1]のx座標情報とb[1][2]のy座標情報はb[1][n[1]-1]のx座標とb[1][n[1]]のy座標と同じ値になります
-輪郭なので一周するようにしています
 また輪郭は左回り(反時計回り)でなぞるようになっていますので、右回り(時計回り)にする場合は各自工夫してください
 ]]
 @例34
---dialog:変数名,name="hensuuとだけ記入"
 --rikky_moduleをロードします
 require("rikky_module")
 --bordering関数を使って輪郭情報を取得します
@@ -1924,30 +1868,167 @@ require("rikky_module")
 obj.setfont("",50)
 rikky_module.textload("aiueo\nkakiku<#00ffff>keko\nsashisuseso",2,8)
 
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--マテリアル描画について
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+rikky_module.dllはマテリアル描画もサポートしています
+require("rikky_module")でdllをロードします
+マテリアル描画とは光源を用いて、光沢や陰影を作って描画するものです
+materialdraw_init関数でマテリアルの設定をして、materialdrawで描画します
+設定するときは、materialdraw_init関数に下のようなテーブルを渡します
+init_data = {
+	light_num = 
+	,
+	position○ = {x = , y = , z = , object = string}
+	,
+	light○ = {R = , G = , B = }
+	,
+	[
+	position○ = {x = , y = , z = , object = string}
+	,
+	light○ = {R = , G = , B = }
+	,
+	]
+	ambient = {R = , G = , B = }
+	,
+	emissive = {R = , G = , B = }
+	,
+	specular = {R = , G = , B = , shininess = }
+}
+そのテーブルをmaterialdraw_init関数に渡して
+rikky_module.materialdraw_init(init_data)
+とします
+設定しない項目は無視しても問題ありませんが、
+メモリには直前に使った設定が残っているので、予想と違うことになる場合があります
+その場合はrikky_module.materialdraw_init(0)と0を引数に渡して、すべてを初期化することができます
+設定がすんだらobj.drawやobj.drawpolyのように位置や角度などの引数を渡すと描画できます
+rikky_module.materialdraw(x, y, z, zoom, alpha, rx, ry, rz)
+または
+rikky_module.materialdraw(x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3)
+のようにします
+引数の数で自動的に判断します
+引数が0以上8以下はobj.draw、12または20または21のときはobj.drawpolyになります
+materialdraw_init関数はobj.loadとmaterialdraw関数の間で必ず呼び出してください
+設定項目の説明ですが
+ライトは最大4つまで設定可能です
+ライトの数をlight_numに設定します
+diffuseはオブジェクトのRGBをそのまま用いりますので、設定項目にはありません
+position○は光源(ライト)の位置です
+objectに"shadow"を指定すると、カメラ制御のシャドーの光源XYZの値になります
+objectに"camera"を指定すると、カメラ制御のカメラのXYZの値になります
+objectに"L数値"を指定すると、数値部分のレイヤにあるオブジェクトの座標位置になります
+L数値で設定したオブジェクトの座標位置はグループ制御の変化にも対応している安心設計です
+"L10"とするとレイヤ10にあるオブジェクトの位置になります
+light○は光源のRGB値を設定できます
+position○とlight○はライトの数だけその丸をその設定したい数値にします
+light_num = 2ならば
+position1
+light1
+positoin2
+light2
+をそれぞれ設定する必要があります
+ambientは環境色といわれるもので、これはRGB値となっていますが100%で設定します
+100にするとdiffuseで暗くなる部分も本来のRGB値がそのまま出ます
+emissiveは元のRGB値に加える色味です
+specularは鏡面反射です
+shininessはハイライトのシュッとする感じを決める数値です
+]]
+@例37
+--track0:x,-1000,1000,200
+--track1:y,-1000,1000,0
+--track2:z,-1000,1000,200
+--rikky_moduleをロードします
+require("rikky_module")
+--material_init関数に渡すテーブルを設定します
+init = {
+	light_num = 1,
+	position1 = {x = obj.track0, y = obj.track1, z = obj.track2, object = false},
+	light1 = {R = 255, G = 255, B = 255},
+	specular = {R = 128, G = 128, B = 128, shininess = 2000},
+	emissive = {R = 0, G = 0, B = 0},
+	ambient = {R = 20, G = 20, B = 20}--これだけパーセント
+}
+--前回のデータがメモリに残っているので、前回が今回のに影響します
+--それを防ぐためにrikky_module.materialdraw_init(0)で初期化することを勧めますが、今回はしません
+--設定したいライトの数だけposition○とlight○のように数字を増やしてその分のライトの情報を設定します
+obj.load("figure","四角形",0xff0000,1)
+--materialdrawを始める前にmaterialdraw_initを必ず使う
+rikky_module.materialdraw_init(init)
+--あとは通常通りobj.drawpolyと同じ要領で引数を渡す
+--描画の際は面の向きに注意が必要です
+b = 50
+r= 100
+k = 1
+for y=1,b
+do
+d0 = math.pi * (y-1)/b
+d1 = math.pi * y/b
+y0 = -r*math.cos(d0)
+y1 = -r*math.cos(d1)
+r0 = r*math.sin(d0)
+r1 = r*math.sin(d1)
+for x= 1,b
+do
+d0 = 2*math.pi*(x-1)/b
+d1 = 2*math.pi*x/b
+x0 = -r0*math.sin(d1)
+x1 = -r0*math.sin(d0)
+x2 = -r1*math.sin(d0)
+x3 = -r1*math.sin(d1)
+z0 = -r0*math.cos(d1)
+z1 = -r0*math.cos(d0)
+z2 = -r1*math.cos(d0)
+z3 = -r1*math.cos(d1)
+rikky_module.materialdraw(
+x0,y0,z0,
+x1,y0,z1,
+x2,y1,z2,
+x3,y1,z3)
+end
+end
 
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--一時呼び込みについて
+--++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--[[
+reloadbuffer関数は1度レイヤを1から100まで読み込みます
+なので下にあるグローバル変数を読み込むことなどが可能になります
+試作段階なので細かな説明は省きます
+]]
 --[[
 歴史
 20XX extension.dllとany_key.dllとrikky_get.dllをrikky_module.dllに統合、この段階で実質ver0.3
 
-2016 3 03 ひな祭りにエラー報告をいただき、正しくライブラリリンクした
+2016 03 03 ひな祭りにエラー報告をいただき、正しくライブラリリンクした
 
-2016 3 11 list関数とgetinfo関数とtype関数とglassdraw関数とconvert関数とmouse関数とaudiobuffer関数を追加、ver0.4
+2016 03 11 list関数とgetinfo関数とtype関数とglassdraw関数とconvert関数とmouse関数とaudiobuffer関数を追加、ver0.4
 
-2016 3 17 list関数とfont関数の共存エラーを修正、dllのバージョン0.4aに変更
+2016 03 17 list関数とfont関数の共存エラーを修正、dllのバージョン0.4aに変更
 
 2016 時期不明 dllのバージョン0.4bに変更
 
-2016 5 17 getinfo関数の種類追加、"filter"をカスタムオブジェクトで使う際のエラー訂正、rotation関数、dataload関数、image関数、setdialogparam関数の追加、dllのバージョン0.5に変更
+2016 05 17 getinfo関数の種類追加、"filter"をカスタムオブジェクトで使う際のエラー訂正、rotation関数、dataload関数、image関数、setdialogparam関数の追加、dllのバージョン0.5に変更
 
-2016 5 26 setdialogparam関数の文字列操作の一部訂正、audiobufferの一部訂正、image関数に新要素の追加、dllのバージョン0.5aに変更 また　where_is_rikky_module.dll.exeを開発
+2016 05 26 setdialogparam関数の文字列操作の一部訂正、audiobufferの一部訂正、image関数に新要素の追加、dllのバージョン0.5aに変更 また　where_is_rikky_module.dll.exeを開発
 
-2016 6 03 image関数に新要素追加、getinfo関数に新しくculling、force、antialias、billboardのフラグ取得の追加、convert関数でUTF-8が扱えるように改良、dllのバージョン0.5bに変更
+2016 06 03 image関数に新要素追加、getinfo関数に新しくculling、force、antialias、billboardのフラグ取得の追加、convert関数でUTF-8が扱えるように改良、dllのバージョン0.5bに変更
 
-2016 6 15 setdialogparam関数でのカスタムオブジェクト挙動を一部修正と16進数表示追加、convert関数のunicodeの改行における処理を変更、getinfo関数のfocusとfilterの中点におけるエラーを修正、参照アドレスのオフセット値の見直し、where_is_rikky_module.dll.exeのまとめた先が表示されない不具合を修正、dllのバージョン0.5cに変更
+2016 06 15 setdialogparam関数でのカスタムオブジェクト挙動を一部修正と16進数表示追加、convert関数のunicodeの改行における処理を変更、getinfo関数のfocusとfilterの中点におけるエラーを修正、参照アドレスのオフセット値の見直し、where_is_rikky_module.dll.exeのまとめた先が表示されない不具合を修正、dllのバージョン0.5cに変更
 
-2016 7 09 getinfo関数のtextの不具合を訂正、mouseのアドレス参照のエラーを訂正、dllのバージョン0.5dに変更
+2016 07 09 getinfo関数のtextの不具合を訂正、mouseのアドレス参照のエラーを訂正、dllのバージョン0.5dに変更
 
-2016 8 12 camerainfo関数とassign関数とcolorconvert関数とbordering関数とaxisconvert関数とaxisconvertEx関数とtextload関数を追加、
+2016 08 13 camerainfo関数とassign関数とcolorconvert関数とbordering関数とaxisconvert関数とaxisconvertEx関数とtextload関数を追加、
           getinfo関数に新しくgroupの情報取得を追加、frameでのシーン機能の現フレームと全体のフレーム数を訂正、audiobuffer関数の再生ウインドでの再生を修正、rotation関数の一部使い方変更、image関数の"i+"の仕様を変更
           dllのバージョン1.0に変更、不具合がない限りこれでおしまい
+
+2016 12 24 materialdraw関数とmaterialdraw_init関数を追加、getinfo関数のgroupとcamerainfo関数で発生するエラー除去、bordering関数で間引きできるように改良、image関数でidに文字列やマイナスの数値を指定できるようにし、また引数なしで起こるエラーを修正、dllのバージョン1.1に変更
+
+2017 01 28 getinfo関数、camerainfo関数、materialdraw_inti関数のグループ制御に関わる個所を訂正、試作版のreloadbuffer関数を追加、dllのバージョン1.1aに変更
+
+
+2017 09 04 全体的に書きなおして、rikky_memory.aufプラグインとの連携をとるようにした
+          getinfo関数のgroupのエラーを修正、hwndのオプション3と4を4と5に改めて、3にはタイムラインのハンドルを取得できるようにした、バージョン取得で通し番号や連携するプラグインのバージョンも取得できるようにした
+          image関数のmixで戻り値を通常だとピクセルデータ、横幅、縦幅にして+をつけたときは戻り値はブーリアンで合成した画像にオブジェクトがなるように変更
+          glassdraw_init関数で新しくrefractive、offsetZ、boundaryのパラメーターを設定できるようにし、描画方法をdrawとdrawpoly両方行えるようにした
 ]]--

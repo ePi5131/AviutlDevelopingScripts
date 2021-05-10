@@ -1,0 +1,14 @@
+--track0:zoom(px),0,2000,30,1
+--track1:line(px),0,2000,0,1
+
+local z,l = obj.track0, obj.track1
+obj.effect("クリッピング","上",z,"下",z,"左",z,"右",z)
+if l~=0 then
+    obj.copybuffer("tmp","obj")
+    obj.setoption("dst","tmp")
+    obj.draw()
+    obj.setoption("blend","alpha_sub")
+    obj.effect("クリッピング","上",l,"下",l,"左",l,"右",l)
+    obj.draw()
+    obj.copybuffer("obj","tmp")
+end

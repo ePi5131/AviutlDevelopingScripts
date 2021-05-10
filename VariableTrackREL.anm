@@ -5,10 +5,10 @@
 --dialog:Ši•ÊŠi”[,local save=1;
 
 local layer=obj.layer
-if(type(VTL)~="table") then VTL={} end
+if(type(VTR)~="table") then VTR={} end
 
-if(VTL["layer"..layer]==nil) then 	VTL["layer"..layer]={}	end
-if(VTL[layer]==nil) then 			VTL[layer]={} 			end
-VTL["layer"..layer][save], VTL[layer][save]={}, {}
-VTL["layer"..layer][save]	=	{obj.track0, obj.track1, obj.track2, obj.track3}
-VTL[layer][save]				=	{obj.track0, obj.track1, obj.track2, obj.track3}
+if(VTR["layer"..layer]==nil) then 	VTR["layer"..layer]={}	end
+if(VTR[layer]==nil) then 			VTR[layer]={} 			end
+VTR["layer"..layer][save], VTR[layer][save]={}, {}
+VTR["layer"..layer][save]	=	{obj.track0, obj.track1, obj.track2, obj.track3}
+VTR[layer][save]				=	{obj.track0, obj.track1, obj.track2, obj.track3}

@@ -1,0 +1,9 @@
+--track0:reset,0,1,0,1
+--dialog:testdialog,testdialog="none";
+
+debug_print(testdialog)
+require("rikky_module")
+if obj.track0==1 then
+	local r=rikky_module.setdialogparam(testdialog,"init")
+	debug_print("- initalized: "..tostring(r))
+end

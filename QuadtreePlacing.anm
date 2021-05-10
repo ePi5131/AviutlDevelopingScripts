@@ -1,0 +1,12 @@
+--track0:X,-100,100,0,1
+--track1:Y,-100,100,0,1
+--track2:unit,0,1000,250,0.01
+--track3:level,-10,10,0,1
+
+local x,y = obj.track0,obj.track1
+local u = obj.track2
+local l = obj.track3
+
+local s = u*2^(-l)
+obj.ox = obj.ox + obj.w/2 + s*x
+obj.oy = obj.oy + obj.h/2 + s*y

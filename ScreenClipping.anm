@@ -1,0 +1,21 @@
+--[[
+
+
+]]
+
+--track0:X(%),0,100,100,0.01
+--track1:Y(%),0,100,100,0.01
+--check0:最大サイズから,0
+
+local w,h = obj.screen_w, obj.screen_h
+local xaf,yaf = obj.track0/200, obj.track1/200
+
+local x,y
+if obj.check0 then
+    local s=math.min(w,h)
+    x,y = s*xaf, s*xaf
+else
+    x,y = w*xaf, h*yaf
+end
+
+obj.effect("クリッピング","上",y,"下",y,"左",x,"右",x)

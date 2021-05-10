@@ -1,0 +1,301 @@
+--[[
+
+type	:
+	- [0] mono,白黒(RGBの平均)
+	- [1] R
+	- [2] G
+	- [3] B
+	- [4] H
+	- [5] S
+	- [6] V
+	- [7] custom color
+
+rev		: 値を反転します
+
+useori	: スクリプトを適用しているオブジェクトをそのままマップにします。
+
+Color 	: 透過するカラーを選択します。
+
+]]
+@[Color]→[Alpha]
+--track0:type,0,7,0,1
+--track1:reverse,0,1,0,1
+--track2:maplayer,0,100,0,1
+--track3:AjustLumi,0,1,0,1
+--check0:run,0
+--dialog:Color/col,local customcol=0xffffff;maplayerエフェクト/chk,local isLayerEffect=1;rikky_module/chk,local isUseRikky=1;
+
+if obj.check0 then
+	-- defines
+	local t,isRev,maplayer,isAjustLumi = obj.track0, obj.track1==1, obj.track2, obj.track3==1
+	--[[
+		? dll ->
+			引数		: x;
+			戻り値	: x;
+		? lua ->
+			引数		: RGBに変換の必要あり;
+			戻り値	: colへ変換の必要あり
+	]]
+	local convert = assert(loadstring( --convertはreturnされたfunction
+		  "return function(objr, objg, objb, obja, mapr, mapg, mapb, mapa, x, y)		\n"
+		.."		local r,g,b = objr,objg,objb											\n"
+		.."		local a																	\n"
+		.."		local isExistMap = mapr and mapg and mapb and mapa						\n"
+		.."		local t,isRev,maplayer,isAjustLumi = "
+		..		t..","..tostring(isRev)..","..maplayer..","..tostring(isAjustLumi).."	\n"
+		.."		local cr,cg,cb = RGB("..customcol..")									\n"
+		.."\n"
+		.."		if maplayer==0 and isExistMap then "
+		..			"objr,objg,objb,obja = mapr,mapg,mapb,mapa end						\n"
+		.."		if isRev then objr,objg,objb,obja = 255-objr,255-objg,255-objb,obja end	\n"
+		.."		local h,s,v = HSV(RGB(r,g,b))											\n"
+		.."		local abs=math.abs														\n"
+		.."\n"
+		.."		if 		t==1 then	a = r												\n"
+		.."		elseif 	t==2 then	a = g												\n"
+		.."		elseif 	t==3 then	a = b												\n"
+		.."		elseif 	t==4 then	a = h/360*255										\n"
+		.."		elseif 	t==5 then	a = s/100*255										\n"
+		.."		elseif 	t==6 then	a = v/100*255										\n"
+		.."		elseif 	t==7 then	a = (abs(r-cr)+abs(g-cg)+abs(b-cb))/3				\n"
+		.."		else 					a = (r+g+b)/3									\n"
+		.."		end																		\n"
+		.."\n"
+		.."		if isAjustLumi then														\n"
+		.."			if 1<=t and t<=3 then												\n"
+		.."				r,g,b = t==1 and 255 or r,t==2 and 255 or g,t==3 and 255 or b 	\n"
+		.."			elseif 4<=t and t<=6 then											\n"
+		.."				h,s,v = t==4 and 0 or h,t==5 and 100 or s,t==6 and 100 or v 	\n"
+		.."				r,g,b = RGB(HSV(h,s,v))											\n"
+		.."			elseif t==7 then													\n"
+		.."				r,g,b = abs(r-cr),abs(g-cg),abs(b-cb)							\n"
+		.."			else 																\n"
+		.." 			r,g,b = 255,255,255 											\n"
+		.."			end																	\n"
+		.."		end																		\n"
+		.."\n"
+		.."		return r,g,b,a 															\n"
+		.."end"
+	))()
+	
+-- --===============================================
+	-- -- load rikky_module (optional)
+	require("rikky_module")
+	if rikky_module == nil then
+		local CPATH = {}
+		local cpath = package.cpath .. ";"
+		local n
+		while(1) do
+			n = cpath:find(";")
+			if n then
+				CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+				cpath = cpath:sub(n + 1, #cpath)
+			else
+				break
+			end
+		end
+		if not CPATH[2]:find("script\\?.dll") then
+			CPATH[3] = CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+			package.cpath = package.cpath .. ";" .. CPATH[3]
+		end
+		for i = 1, #CPATH do
+			local f = io.open(CPATH[i]:gsub("?", "rikky_module"), "rb")
+			if f then
+				require("rikky_module")
+				f:close()
+				break
+			end
+		end
+	end
+-- --===============================================
+	
+	if (isUseRikky==1 and rikky_module) or isUseRikky==0 then
+		local map={}
+		local w,h=obj.getpixel()
+		if maplayer~=0 then
+			obj.copybuffer("cache:AM:CA:obj","obj")
+			obj.load("layer",maplayer,isLayerEffect==1)
+			-- local mw,mh=obj.getpixel()
+			local col,a,r,g,b
+			for i=1,w do
+				map[i] = {}
+				for j=1,h do
+					col,a = obj.getpixel(i,j)
+					r,g,b = RGB(col)
+					map[i][j] = {r=r, g=g, b=b, a=a}
+				end
+			end
+			obj.copybuffer("obj","cache:AM:CA:obj")
+		end
+
+		if rikky_module and isUseRikky==1 then
+			if maplayer~=0 then
+				rikky_module.pixelfunction(convert,map)
+			else
+				rikky_module.pixelfunction(convert)
+			end
+		else
+			local col,a,r,g,b
+			for i=1,w do
+				for j=1,h do
+					col,a = obj.getpixel(i,j)
+					local args={RGB(col)}
+					args[4]=a*255
+					args[5],args[6],args[7] = maplayer~=0 and RGB(map[i][j].r, map[i][j].g, map[i][j].b) or nil,nil,nil
+					args[8],args[9] = i,j
+					r,g,b,a = convert(unpack(args))
+					-- obj.putpixel(i,j, RGB(r*a+tr*(1-a),g*a+tg*(1-a),b*a+tb*(1-a)),1)
+					obj.putpixel(i,j,col,a/255)
+				end
+			end
+		end
+	else
+		obj.setfont("メイリオ",40)
+		obj.load("AlphaMap:\nrikky_moduleが見つかりませんでした。\n正常に導入されているか確認してください。")
+	end
+else
+	obj.setfont("メイリオ",40)
+	obj.load("AlphaMap:\nrunにチェックをいれると、スクリプトが実行されます...")
+end
+
+
+@[Alpha]→[Color]
+--track0:type,0,7,0,1
+--track1:reverse,0,1,0,1
+--track2:maplayer,0,100,0,1
+--track3:AjustLumi,0,1,0,1
+--check0:run,0
+--dialog:Color/col,local customcol=0xffffff;maplayerエフェクト/chk,local isLayerEffect=1;rikky_module/chk,local isUseRikky=1;
+
+if obj.check0 then
+	-- defines
+	local t,isRev,maplayer,isAjustLumi = obj.track0, obj.track1==1, obj.track2, obj.track3==1
+	--[[
+		? dll ->
+			引数		: x;
+			戻り値	: x;
+		? lua ->
+			引数		: RGBに変換の必要あり;
+			戻り値	: colへ変換の必要あり
+	]]
+	local convert = assert(loadstring( --convertはreturnされたfunction
+		  "return function(objr, objg, objb, obja, mapr, mapg, mapb, mapa, x, y)		\n"
+		.."		local r,g,b = objr,objg,objb											\n"
+		.."		local a																	\n"
+		.."		local isExistMap = mapr and mapg and mapb and mapa						\n"
+		.."		local t,isRev,maplayer,isAjustLumi = "
+		..		t..","..tostring(isRev)..","..maplayer..","..tostring(isAjustLumi).."	\n"
+		.."		local cr,cg,cb = RGB("..customcol..")									\n"
+		.."\n"
+		.."		if maplayer==0 and isExistMap then "
+		..			"objr,objg,objb,obja = mapr,mapg,mapb,mapa end						\n"
+		.."		if isRev then objr,objg,objb,obja = 255-objr,255-objg,255-objb,obja end	\n"
+		.."		local h,s,v = HSV(RGB(r,g,b))											\n"
+		.."		local abs=math.abs														\n"
+		.."\n"
+		.."		if 		t==1 then	a = r												\n"
+		.."		elseif 	t==2 then	a = g												\n"
+		.."		elseif 	t==3 then	a = b												\n"
+		.."		elseif 	t==4 then	a = h/360*255										\n"
+		.."		elseif 	t==5 then	a = s/100*255										\n"
+		.."		elseif 	t==6 then	a = v/100*255										\n"
+		.."		elseif 	t==7 then	a = (abs(r-cr)+abs(g-cg)+abs(b-cb))/3				\n"
+		.."		else 					a = (r+g+b)/3									\n"
+		.."		end																		\n"
+		.."\n"
+		.."		if isAjustLumi then														\n"
+		.."			if 1<=t and t<=3 then												\n"
+		.."				r,g,b = t==1 and 255 or r,t==2 and 255 or g,t==3 and 255 or b 	\n"
+		.."			elseif 4<=t and t<=6 then											\n"
+		.."				h,s,v = t==4 and 0 or h,t==5 and 100 or s,t==6 and 100 or v 	\n"
+		.."				r,g,b = RGB(HSV(h,s,v))											\n"
+		.."			elseif t==7 then													\n"
+		.."				r,g,b = abs(r-cr),abs(g-cg),abs(b-cb)							\n"
+		.."			else 																\n"
+		.." 			r,g,b = 255,255,255 											\n"
+		.."			end																	\n"
+		.."		end																		\n"
+		.."\n"
+		.."		return r,g,b,a 															\n"
+		.."end"
+	))()
+	
+-- --===============================================
+	-- -- load rikky_module (optional)
+	require("rikky_module")
+	if rikky_module == nil then
+		local CPATH = {}
+		local cpath = package.cpath .. ";"
+		local n
+		while(1) do
+			n = cpath:find(";")
+			if n then
+				CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+				cpath = cpath:sub(n + 1, #cpath)
+			else
+				break
+			end
+		end
+		if not CPATH[2]:find("script\\?.dll") then
+			CPATH[3] = CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+			package.cpath = package.cpath .. ";" .. CPATH[3]
+		end
+		for i = 1, #CPATH do
+			local f = io.open(CPATH[i]:gsub("?", "rikky_module"), "rb")
+			if f then
+				require("rikky_module")
+				f:close()
+				break
+			end
+		end
+	end
+-- --===============================================
+	
+	if (isUseRikky==1 and rikky_module) or isUseRikky==0 then
+		local map={}
+		local w,h=obj.getpixel()
+		if maplayer~=0 then
+			obj.copybuffer("cache:AM:CA:obj","obj")
+			obj.load("layer",maplayer,isLayerEffect==1)
+			-- local mw,mh=obj.getpixel()
+			local col,a,r,g,b
+			for i=1,w do
+				map[i] = {}
+				for j=1,h do
+					col,a = obj.getpixel(i,j)
+					r,g,b = RGB(col)
+					map[i][j] = {r=r, g=g, b=b, a=a}
+				end
+			end
+			obj.copybuffer("obj","cache:AM:CA:obj")
+		end
+
+		if rikky_module and isUseRikky==1 then
+			if maplayer~=0 then
+				rikky_module.pixelfunction(convert,map)
+			else
+				rikky_module.pixelfunction(convert)
+			end
+		else
+			local col,a,r,g,b
+			for i=1,w do
+				for j=1,h do
+					col,a = obj.getpixel(i,j)
+					local args={RGB(col)}
+					args[4]=a*255
+					args[5],args[6],args[7] = maplayer~=0 and RGB(map[i][j].r, map[i][j].g, map[i][j].b) or nil,nil,nil
+					args[8],args[9] = i,j
+					r,g,b,a = convert(unpack(args))
+					-- obj.putpixel(i,j, RGB(r*a+tr*(1-a),g*a+tg*(1-a),b*a+tb*(1-a)),1)
+					obj.putpixel(i,j,col,a/255)
+				end
+			end
+		end
+	else
+		obj.setfont("メイリオ",40)
+		obj.load("AlphaMap:\nrikky_moduleが見つかりませんでした。\n正常に導入されているか確認してください。")
+	end
+else
+	obj.setfont("メイリオ",40)
+	obj.load("AlphaMap:\nrunにチェックをいれると、スクリプトが実行されます...")
+end

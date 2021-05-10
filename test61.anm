@@ -1,0 +1,3 @@
+--dialog:testcol,col=0xffffff;
+require("rikky_module")
+rikky_module.colordialog(1)

@@ -1,0 +1,3 @@
+--check0:enable,1
+
+obj.alpha = ( obj.getinfo("saving") and obj.check0 ) and 0 or obj.alpha

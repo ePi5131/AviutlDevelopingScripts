@@ -1,0 +1,83 @@
+--[[
+受験で忙しく説明は簡易的ですが何卒
+
+- createUV
+標準の「UVマップ画像」を作ります。色が違うのは、RGBじゃなくてYCaCbで構築してるからです（滑らかにするため）
+W,Hに0を代入すると、図形のサイズに合わせてUVマップ画像が生成されます。
+
+- makeCache
+UVmappingするためのUVマップを形式化します。
+つまり、ただの画像からUVmapのフォーマットへ変換するみたいな感じです。
+フレームバッファに直接ぶっこんでくれたら、フレームバッファの画像でマップを生成します
+
+- createOneLayerUV & makecache
+いつもスマートでいたいあなたに。
+一つのアニメーション効果でUVマップの生成からキャッシュまで担います。
+UVマップは、このアニメーション効果以下のエフェクトに適用されます。
+つまり、一つのオブジェクトだけで済むってわけです。
+ただし、ほかのDLLを使うスクリプトを使うとバグるので注意！
+やりようによっては、いい感じにグリッチしてくれますので、使いよう。
+
+- UVmapping
+今回の主役
+フレームバッファにかけることで、格納されているマップに合わせて変形してくれます。
+仕様は普通の（？）UVmapと同じ方式。
+サイズはマップのサイズに合わせますので注意。
+
+developed by Aodaruma(@Aodaruma_)
+]]
+
+@createUV
+--track0:W,0,2000,-1,1
+--track1:H,0,2000,-1,1
+--track2:alpha(%),0,100,0
+local ow,oh = obj.getpixel()
+local w,h =
+    obj.track0<1 and ow or math.floor( obj.track0 ),
+    obj.track1<1 and oh or math.floor( obj.track1 )
+local alpha = 100-obj.track2 or 100
+obj.copybuffer("tmp","frm")
+obj.draw()
+require"uv_mapping".create_uvmap(w,h)
+obj.effect()
+obj.draw(0,0,0,1,alpha/100)
+obj.copybuffer("obj","tmp")
+-- obj.draw()
+
+@makeCache
+--track0:保存場所,0,100,0,1
+--check0:透明化,0
+-- if obj.check0 then
+uv = uv or {}
+uv[obj.track0]=require"yca".makecache()
+-- end
+obj.alpha = obj.check0 and 0 or 1
+
+@createOneLayerUV & makecache
+--track0:W,0,2000,-1,1
+--track1:H,0,2000,-1,1
+--track2:保存場所,0,100,0,1
+--check0:透明化,0
+local ow,oh = obj.getpixel()
+local w,h =
+    obj.track0<1 and ow or math.floor( obj.track0 ),
+    obj.track1<1 and oh or math.floor( obj.track1 )
+require"uv_mapping".create_uvmap(w,h)
+obj.effect()
+obj.draw()
+uv = uv or {}
+uv[obj.track2]=require"yca".makecache()
+obj.alpha = obj.check0 and 0 or 1
+
+
+@UVmapping
+--track0:保存場所,0,100,0,1
+--check0:実行,0
+if obj.check0 then
+    l = obj.track0
+    if uv[l] then
+        require"uv_mapping"(uv[l])
+    else
+        obj.load("指定されたレイヤーにUVmapが見つかりませんでした。\n指定されたレイヤー: "+(l))
+    end
+end

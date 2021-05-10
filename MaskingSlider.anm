@@ -1,0 +1,35 @@
+--track0:Num,1,100,5,1
+--track1:Width,5,500,200,1
+--track2:Diff,1,50,3
+--track3:Angle,-720,720,30
+--check0:reverse,1
+local num,dif,d,angle=obj.track0,obj.track1,obj.track2,obj.track3
+local i,u
+local x,y,z,w,h,rz=obj.ox,obj.oy,obj.oz,obj.w,obj.h,obj.getvalue("rz")
+
+if(obj.check0) then
+	require("rikky_module")
+	rikky_module.image("w","MS-tmp")
+else
+	if(w<h) then u=h else u=w end
+	obj.copybuffer("cache:ori","obj")
+	obj.setoption("dst","tmp",u,u)
+end
+
+if(angle%360~=0) then
+	obj.setoption("antialias",1)
+	for i=1,num do
+		if dif*i+1<math.max(obj.screen_w,obj.screen_h)*2 then
+			if(obj.check0) then rikky_module.image("r","MS-tmp") else obj.copybuffer("obj","cache:ori") end
+			obj.effect("マスク","type",1,"サイズ",dif*(i-1)-2,	"マスクの反転",1)
+			obj.effect("マスク","type",1,"サイズ",dif*i+1,		"マスクの反転",0)
+			obj.draw(
+				x,y,z,1,1,0,0,
+				angle*((i%d)+((i-1)%d)*-2)*(d)
+			)
+		end
+	end
+obj.load("tempbuffer")
+end
+
+if(obj.check0) then rikky_module.image("c","MS-tmp") end

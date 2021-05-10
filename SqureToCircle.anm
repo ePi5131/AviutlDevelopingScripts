@@ -1,0 +1,138 @@
+--track0:AF(%),0,100,0
+--track1:div(2^),2,10,5,1
+
+local af,exp=obj.track0/100,obj.track1
+local uf=1-af
+local w,h=obj.getpixel()
+local d,z=2^exp,0
+local dw,dh=w/d,h/d
+local i,j,x0,x1,x2,x3,y0,y1,y2,y3,s0,s1,s2,s3,r0,r1,u0,u1,v0,v1,i0,j0,i1,j1,b0,b1
+local sin,cos,atan2,pi=
+	function(x)	return math.sin(math.rad(x)) end,
+	function(x)	return math.cos(math.rad(x)) end,
+	function(y,x)	return math.atan2(y,x)*180/math.pi end,
+	math.pi
+obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+obj.setoption("blend","alpha_add")
+
+debug_print("----------------")
+for i=1,d do --w
+	for j=1,d do --h
+		i0,i1=
+			math.abs((i-1)-d/2),
+			math.abs((i-0)-d/2)
+
+		j0,j1=
+			math.abs((j-1)-d/2),
+			math.abs((j-0)-d/2)
+
+		if i0>j1 then
+			r0=dw*i0
+			b0=true
+		else
+			r0=dw*j0
+			b0=false
+		end
+
+		if i1>j0 then
+			r1=dw*i1
+			b1=true
+		else
+			r1=dw*j1
+			b1=false
+		end
+		-- r0,r1=
+		-- 	i0>j1 and dw*i0 or dw*j0,
+		-- 	i1>j0 and dw*i1 or dw*j1
+
+		-- r0,r1=
+		-- 	(dw*(math.max(
+		-- 		math.abs((i-1)-d/2)
+		-- 		-- math.abs((j-1)-d/2)
+		-- 	))),	
+		-- 	(dw*(math.max(
+		-- 		math.abs((i-0)-d/2)
+		-- 		-- math.abs((j-0)-d/2)
+		-- 	)))
+
+		
+		-- x,y
+		x0,x1,x2,x3=
+			(dw*(i-1))-w/2,
+			(dw*(i-0))-w/2,
+			(dw*(i-0))-w/2,
+			(dw*(i-1))-w/2
+		-- x0,x1,x2,x3=
+		-- 	(dw*(i-1)),
+		-- 	(dw*(i-0)),
+		-- 	(dw*(i-0)),
+		-- 	(dw*(i-1))
+
+		y0,y1,y2,y3=
+			(dh*(j-1))-h/2,
+			(dh*(j-1))-h/2,
+			(dh*(j-0))-h/2,
+			(dh*(j-0))-h/2
+		-- y0,y1,y2,y3=
+		-- 	(dh*(j-0)),
+		-- 	(dh*(j-0)),
+		-- 	(dh*(j-1)),
+		-- 	(dh*(j-1))
+
+		-- slope
+		s0,s1,s2,s3= --x~=0 andの処理は要らなかったみたいですね
+			atan2(y0,x0),
+			atan2(y1,x1),
+			atan2(y2,x2),
+			atan2(y3,x3)
+
+		-- recal and affects
+		-- w方向
+		if b0 then
+		dx0,dx1,dx2,dx3=
+			x0*uf +cos(s0)*r0*af,
+			x1*uf +cos(s1)*r1*af,
+			x2*uf +cos(s2)*r1*af,
+			x3*uf +cos(s3)*r0*af
+
+		dy0,dy1,dy2,dy3=
+			y0*uf +sin(s0)*r0*af,
+			y1*uf +sin(s1)*r1*af,
+			y2*uf +sin(s2)*r1*af,
+			y3*uf +sin(s3)*r0*af
+		elseif b1 or b0==false then
+		--　h方向
+		dx0,dx1,dx2,dx3=
+			x0*uf +cos(s0)*r0*af,
+			x1*uf +cos(s1)*r0*af,
+			x2*uf +cos(s2)*r1*af,
+			x3*uf +cos(s3)*r1*af
+
+		dy0,dy1,dy2,dy3=
+			y0*uf +sin(s0)*r0*af,
+			y1*uf +sin(s1)*r0*af,
+			y2*uf +sin(s2)*r1*af,
+			y3*uf +sin(s3)*r1*af
+		end
+
+		-- uv
+		u0,u1=
+			(dw*(i-1)),(dw*(i-0))
+		v0,v1=
+			(dh*(j-1)),(dh*(j-0))
+
+		debug_print((j+4*(i-1))..": "..r0.." / "..r1..";    "..s0)
+
+		obj.drawpoly(
+			dx0,dy0,z,
+			dx1,dy1,z,
+			dx2,dy2,z,
+			dx3,dy3,z,
+			u0,v0,
+			u1,v0,
+			u1,v1,
+			u0,v1
+			)
+	end
+end
+obj.load("tempbuffer")

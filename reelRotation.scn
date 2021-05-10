@@ -1,0 +1,23 @@
+--track0:Blur,0,200,100
+--track1:easing,1,41,24,1
+
+local blur,easingType = obj.track0,obj.track1
+local w,h=obj.screen_w,obj.screen_h
+
+local E=require("easing_aviutl")
+local easing=E["easing"]
+
+-- obj.setoption('antialias',0)
+local dt = 1/obj.totalframe
+local t = obj.getvalue("scenechange")
+debug_print(string.format("dt:%s, t:%s",dt,t))
+
+local p = easing(easingType,t,0,1,1,1)
+local vp = easing(easingType,t,0,1,1,1)-easing(easingType,t-dt,0,1,1,1)
+debug_print(string.format("p:%s, vp:%s",p,vp))
+
+obj.draw(0,p*h)
+obj.load("framebuffer")
+obj.draw(0,(p-1)*h)
+
+obj.filter("Ç⁄Ç©Çµ","ècâ°î‰",-100,"îÕàÕ",blur*h*vp/50)

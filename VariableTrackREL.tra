@@ -1,0 +1,13 @@
+--twopoint
+--param:1
+
+local p=obj.getpoint("param")
+local i,af = math.modf(obj.getpoint("index"))
+local gp1,gp2=obj.getpoint(i),obj.getpoint(i+1)
+
+if(type(VTR)=="table") and (type(VTR[obj.layer])~="nil") then
+	return VTR[obj.layer][1][p]*gp2+gp1
+else
+	debug_print("not found VTR in layer "..obj.layer)
+	return 0
+end

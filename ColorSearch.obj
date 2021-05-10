@@ -1,0 +1,20 @@
+--track0:表示タイプ,0,1,1
+--track1:配色タイプ,0,5,0,1
+--track2:基準color,1,5,1,1
+--check0:表示,1
+--dialog:01 color/col,local CScol1=;02 color/col,local CScol2=;03 color/col,local CScol3=;04 color/col,local CScol4=;05 color,local CScol5=;
+
+require("Aodaruma")
+local showing, scheming, baseCol=obj.track0, obj.track1, obj.track2
+local col1,col2,col3,col4,col5=CScol1,CScol2,CScol3,CScol4,CScol5
+----------
+local sin,cos=
+local pms=Aodaruma.styles.message
+local tl,subtl,dsc=pms("title",true),pms("subtitle",true),pms("description",true)
+local errorcol=Aodaruma.getcols("error",true)
+
+if col1 then
+	
+else
+	Aodaruma.throwError("fatal","ダイアログの01 colorを指定してください。")
+end

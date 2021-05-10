@@ -1,0 +1,15 @@
+--track0:Frame,-100,100,0,1
+--track1:saveAt,1,100,1,1
+--check0:load,0
+
+require("rikky_module")
+if not rikky_module.reloadbuffer() then
+
+	if rikky_module and obj.check0 then
+		rikky_module.reloadbuffer(obj.track0)
+	elseif obj.check0 then
+		obj.setfont("メイリオ",20)
+		obj.load("<s40>rikky_moduleが正常に読み込まれませんでした。指定のフォルダーに入れているか確認してください。")
+	end
+
+end

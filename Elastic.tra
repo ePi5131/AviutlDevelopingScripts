@@ -1,0 +1,9 @@
+--param:1
+local p,n=obj.getpoint("param"),obj.getpoint("num")
+local i,af = math.modf(obj.getpoint("index"))
+af=af+0.01
+local gp1,gp2=obj.getpoint(i),obj.getpoint(i+1)
+local d=GG.elastic[p]
+
+local n=d.e(af,d.a,d.f,d.d,d.t)
+return gp1 +(gp2-gp1)*n

@@ -1,0 +1,212 @@
+--track0:div_W,1,8,1,1
+--track1:div_H,1,8,1,1
+--track2:threshold,0,100,50
+--track3:size(%),0,200,100
+--check0:Adaptive,1
+--dialog:ajustSize/chk,local isAjustDiv=0;Blur,local blur=10;figure/fig,local fig="四角形";usingRM/chk,local isusingRM=0; ∟ID,local RMnum=0;colored/chk,local isColored=0; ∟(color),local color={}  ∟graType(0-2),local gradationType=0;Tempbuffer/chk,local isTempbuffer=0;
+
+local dw,dh,thd,af = obj.track0,obj.track1,obj.track2/100,obj.track3/100
+local w,h = obj.getpixel()
+local sw,sh = obj.screen_w, obj.screen_h
+
+local numlua=require"numlua"
+if not numlua then
+    obj.setfont("メイリオ",30)
+    obj.load("<s50>AdaptiveMosaic<s>\nnumlua.luaが見つかりませんでした。\npluginsフォルダーに格納されているか確認してください。")
+    error("couldn't find 'numlua.lua'. please make sure of existing 'num.lua' in 'plugins' folder")
+end
+local vm = gradationType==4 and numlua({4096,2048,2048}) or numlua({255,255,255}) -- YCbCr, RGB
+
+
+-- ///// getting pixels /////
+-- TODO : add feature of adapting aspects if the number of blur is over maximam screen size
+if blur~=0 then
+    obj.effect("ぼかし","強さ",blur,"サイズ固定",1)
+end
+
+local pixels = numlua()
+for i=1,w do
+    pixels[i]={}
+    for j=1,h do
+        local tp = gradationType==4 and "yc" or "rgb"
+        pixels[i][j] = {obj.getpixel(i,j, tp)}
+        table.remove(pixels[i][j]) -- delete "alpha" element
+    end
+end
+setmetatable(pixels, eachmt)
+----------
+
+-- ///// pick up center pixels of each divisions /////
+local cpixels = numlua()
+for i=1,dw do
+    cpixels[i]={}
+    for j=1,dh do
+        local x,y =
+            (i-dw/2)*w,
+            (i-dh/2)*h
+
+        cpixels[i][j] = {x=x, y=y, p=pixels[x][y]}
+    end
+end
+----------
+
+--///// dividing (main feature) /////
+local result = numlua()
+local n = math.min(dw,dh)
+result[0] = cpixels
+for k=n,1,-1 do -- end this repeat in 'd' (<=d)
+    k2 = n-k    
+    result[k2+1]={}
+
+    for i=1,math.ceil(k/2) do
+        result[k2+1][i] = {}
+
+        for j=1,math.ceil(k/2) do
+            result[k2+1][i][j] = {}
+
+            local sum=numlua()
+            for s=0,1 do
+                if result[k2][i+s] then
+                    for t=0,1 do
+                        if result[k2][i+s][j+t] then
+                            table.insert( sum, result[k2][i][j].p - result[k2][i+s][j+t].p )
+                        end
+                    end
+                end
+            end
+
+            if #sum~=0 and sum:abs()/vm>{thd,thd,thd} then
+                for s=0,1 do
+                    if result[k2][i+s] then
+                        for t=0,1 do
+                            if result[k2][i+s][j+t] then
+                                result[k2][i+s][j+t].s = k2+1
+                            end
+                        end
+                    end
+                end
+            else
+                sum = sum:ave2()
+                result[k2+1][i][j] = sum
+            end
+            
+        end
+    end
+
+    if #result[k2+1]==0 then
+        break
+    end
+end
+debug_print("succeeded")
+result = result:flatten(2)
+
+---------
+
+--///// draw figure or pic /////
+for i=1,d do
+    for j=1,d do
+        local pixel = result[i][j]
+
+
+        -- set color
+        local col
+        if isColored==1 then
+            if      color == "each" then
+                col = pixel.col
+            elseif  type(color)=="table" then
+                if #color==1 then -- only exist 1 element in table
+                    col = unpack(color)
+                else -- 2 and more elements in table
+                    -- ^^^^^^^^^^ --
+                    if      gradationType == 1 then 
+                        -- parabola (RGB)
+
+                    elseif  gradationType == 2 then 
+                        -- exponent (RGB)
+
+                    elseif  gradationType == 3 then 
+                        -- linear (HSV)
+
+                    elseif  gradationType == 4 then
+                        -- linear (YCbCr)
+
+                    else -- 0 and others 
+                        -- linear (RGB)
+                        local rcol = {}
+                        local function f(x) return (#color-2)*math.abs(x)*d+1 end
+                        
+                        for i,e in ipairs(color) do
+                            for j,v in ipairs({RGB(e)}) do
+                                local r = f(pixel.k)
+                                r = r<0 and 0 or r
+                                rcol[j] = rcol[j] + f(pixel.k)
+                            end
+                        end
+                    end
+                    -- ^^^^^^^^^^ --
+                end
+            else
+                col = isusingRM==1 and false or pixel
+            end
+        else -- put original color
+            col = pixel.col
+        end
+
+        if isusingRM==1 then -- using RM image
+            --/// quote from "how to use rikky_module (rikky_moduleの使い方)"
+            if rikky_module == nil then
+                local CPATH = {}
+                local cpath = package.cpath .. ";"
+                local m
+                while(1)do
+                    m = cpath:find(";")
+                    if m then
+                        CPATH[#CPATH + 1] = cpath:sub(1, m - 1)
+                        cpath = cpath:sub(m + 1, #cpath)
+                    else
+                        break
+                    end
+                end
+                if not CPATH[2]:find("script\\?.dll") then
+                    CPATH[3] = CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+                    package.cpath = package.cpath .. ";" .. CPATH[3]
+                end
+                for i = 1, #CPATH do
+                    local f = io.open(CPATH[i]:gsub("?", "rikky_module"), "rb")
+                    if f then
+                        require("rikky_module")
+                        f:close()
+                        break
+                    end
+                end
+            end
+            --///
+
+            if rikky_module then
+                if not rikky_module.image("r",RMnum) then -- read image
+                    obj.setfont("メイリオ",30)
+                    obj.load("<s50>AdaptiveMosaic<s>\n画像が保存されていませんでした。\n指定のIDに保存されているか確認してください。")
+                    error("couldn't find saved image at assigned ID. please check whether images are saved.")
+                end
+
+                if isColored and col then -- coloring
+                    obj.effect("単色化","輝度を保持する",0,"color",col)
+                end
+            else
+                obj.setfont("メイリオ",30)
+                obj.load("<s50>AdaptiveMosaic<s>\nrikky_module.dllが見つかりませんでした。\npluginフォルダーに入っているか確認してください。")
+                error("couldn't find 'rikky_module.dll'. please make sure to put one on 'plugin' folder.''")
+            end
+        else -- using figure
+            obj.load("figure", fig, col, math.max(w/dw,h/dh)*af*r)
+        end
+
+        if isAjustDiv then -- ajust w,h into the aspect of divided pixel block
+            local sx,sy =
+                w/dw<h/dh and (w/dw)/(h/dh) or 100,
+                w/dw>h/dh and (h/dh)/(w/dw) or 100
+            obj.effect("リサイズ","X",sx,"Y",sy)
+        end
+        obj.draw(pixel.x, pixel.y)
+    end
+end

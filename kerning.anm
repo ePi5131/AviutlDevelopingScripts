@@ -1,0 +1,72 @@
+--track0:X適用率(%),-200,200,100
+--track1:Y適用率(%),-200,200,100
+--track2:常にY固定,0,1,1,1
+--track3:初期化,0,1,1,1
+--dialog:pos,AodarumaKerningPos={};
+
+-- rikky_module.dllの使い方から引用
+-- rikky_module.aufの場合は最初から登録されているので、実行されない。
+-- if rikky_module == nil then
+--     local CPATH = {}
+--     local cpath = package.cpath .. ";"
+--     local n
+--     while(1)do
+--         n = cpath:find(";")
+--         if n then
+--             CPATH[#CPATH + 1] = cpath:sub(1, n - 1)
+--             cpath = cpath:sub(n + 1, #cpath)
+--         else
+--             break
+--         end
+--     end
+--     if not CPATH[2]:find("script\\?.dll") then
+--         CPATH[3] = CPATH[2]:sub(1, CPATH[2]:find("\\script\\")) .. "script\\?.dll"
+--         package.cpath = package.cpath .. ";" .. CPATH[3]
+--     end
+--     for i = 1, #CPATH do
+--         local f = io.open(CPATH[i]:gsub("?", "rikky_module"), "rb")
+--         if f then
+--             require("rikky_module")
+--             f:close()
+--             break
+--         end
+--     end
+-- end
+
+if rikky_module ~= nil then
+    if obj.num <= 16 then
+        AodarumaKerningInitPos = obj.index==0 and {} or AodarumaKerningInitPos
+        if obj.index==obj.num-1 then
+            local n = obj.num
+            if #AodarumaKerningPos ~= n*2 or obj.track3==1 then
+                rikky_module.setdialogparam("AodarumaKerningPos", AodarumaKerningInitPos)
+            end
+
+            if obj.track2==1 then
+                local t=AodarumaKerningPos
+                for i=1,n*2,2 do
+                    t[i+1]=AodarumaKerningInitPos[i+1]
+                end
+                rikky_module.setdialogparam("AodarumaKerningPos", t)
+            end
+
+            obj.setanchor("AodarumaKerningPos",n,"line")
+        else
+            local i=obj.index*2
+            AodarumaKerningInitPos[i] = obj.ox+obj.x
+            AodarumaKerningInitPos[i+1] = obj.oy+obj.y
+        end
+
+        if #AodarumaKerningPos == obj.num*2 then
+            local i=obj.index*2
+            obj.ox = AodarumaKerningPos[i]*obj.track0/100
+            obj.oy = AodarumaKerningPos[i+1]*obj.track1/100
+        end
+    else
+        obj.setfont("メイリオ",50)
+        obj.load("文字は16個までしか対応していません。")
+    end
+else
+    obj.setfont("メイリオ",50)
+    obj.load("rikky_moduleがロードされていません。\nrikky_module.dllまたはrikky_module.aufが\n正しい場所におかれているかどうか確認してください。")
+end

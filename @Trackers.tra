@@ -1,0 +1,51 @@
+--[[
+ver 1.0
+last edit: 13:01 2018/04/18
+Developed by @Aodaruma_
+]]
+
+@Randamize(%)
+--twopoint
+--param:50
+
+local g = obj.getpoint
+local left, right = g(0), g(1)
+local i,n = g("link")
+local per = g("param")*10
+
+local r = obj.rand(0,1000,obj.frame+obj.totalframe*obj.index,i)
+
+return r <= per and left or right
+
+
+-------------------------------------
+@Skipping(%)
+--twopoint:
+--param:20
+
+local tra = require"auls_tra"
+local g = obj.getpoint
+
+local t, pt = tra.gettime()
+local a = pt[#pt]
+local i, ratio, n = tra.getindex()
+local l, r, p = g(0), g(1), g"param"
+p = p<0 and 1 or (p>100 and 0 or 1-p/100)
+
+local function linear(st,ed,t,at)
+    at = at or 1
+    return (ed-st)*(t/at)+st
+end
+
+if n==0 then
+    return g"default"
+else
+    if i==0 then
+        return linear(l,linear(l,r,pt[1]*p,a),ratio)
+    elseif i==n-1 then
+        return linear(linear(l,r,linear(a,pt[n-1],p),a),r,ratio)
+    else
+        local c = (pt[i]+pt[i+1])/2
+        return linear(linear(l,r,linear(c,pt[i],p),a),linear(l,r,linear(c,pt[i+1],p),a),ratio)
+    end
+end

@@ -1,0 +1,127 @@
+--track0:Affect,1,100,1,1
+
+--track2:Curving,0,3,0,0.01
+--track3:RepNum,0,100,8,1
+--dialog:easeType[1-4],local etype=1;graphFiness,local finess=5000
+--check0:Display,1; -- 可視化
+
+
+-- ティム氏のベジエ軌道を踏襲したフォーマットが理想です。cf.youtube.com/watch?v=8pPSd6aSVnQ
+local af,cvg,repNum=
+	obj.track0/100,
+	-- obj.track1/100,
+	obj.track2,
+	obj.track3
+local totaltime,time,lefttime=obj.totaltime,obj.time,obj.totaltime-obj.time
+local result
+
+--[[
+bouncingEasing
+t:	time(Number / affect 0~1)
+f:	frequency
+d:	decay
+a:	amplitud
+
+(t, b, c, d, a, p)
+returning: 0~1
+]]
+local easing=function(af,a,f,d,etype)
+	if etype<=1 then
+		return e.inBounce(af,0,1,1,a,f)*d+af*(1-d)
+	elseif etype==2 then
+		return e.outBounce(af,0,1,1,a,f)*d+af*(1-d)
+	elseif etype==3 then
+		return e.inOutBounce(af,0,1,1,a,f)*d+af*(1-d)
+	else
+		return e.outInBounce(af,0,1,1,a,f)*d+af*(1-d)
+	end
+end
+
+local bouncing=function(t,b,c,d,n)
+	local sgm=function(k,n,f)
+		local r=0
+		for i=k,n do r = r+f(i) end
+		return r
+	end
+
+    t=t/d
+    for i=1,n do
+    	if t < (1 + sgm(1,i-1,function(k) return 0.5^(k-1) end)) / (1 + sgm(1,i,function(k) return 0.5^(k-1) end)) then
+    		t = i~=1 and t - ((1+sgm(1,n-1,function(k) return 0.5^(k-1) end))/2.75) or t
+    		return c*(7.5625 * t^2 + sgm(1,n-1,function(k) return n*0.25^k end)) + b
+    	end
+    end
+    debug_print("nothing calculated")
+    return false
+end
+
+local function outBounce(t, b, c, d)
+  t = t / d
+  if t < 1 / 2.75 then
+    return c * (7.5625 * t * t) + b
+
+  elseif t < 2 / 2.75 then
+    t = t - (1.5 / 2.75)
+    return c * (7.5625 * t * t + 0.75) + b
+
+  elseif t < 2.5 / 2.75 then
+    t = t - (2.25 / 2.75)
+    return c * (7.5625 * t * t + 0.9375) + b
+
+  else
+    t = t - (2.625 / 2.75)
+    return c * (7.5625 * t * t + 0.984375) + b
+
+  end
+end
+
+local function inBounce(t, b, c, d)
+  return c - outBounce(d - t, 0, c, d) + b
+end
+
+local function inOutBounce(t, b, c, d)
+  if t < d / 2 then
+    return inBounce(t * 2, 0, c, d) * 0.5 + b
+  else
+    return outBounce(t * 2 - d, 0, c, d) * 0.5 + c * .5 + b
+  end
+end
+
+local function outInBounce(t, b, c, d)
+  if t < d / 2 then
+    return outBounce(t * 2, b, c / 2, d)
+  else
+    return inBounce((t * 2) - d, b + c / 2, c / 2, d)
+  end
+end
+
+GG = GG or {}
+GG.bouncing = GG.bouncing or {}
+GG.bouncing[obj.layer] = {e,easing,af,amp,freq,dec,etype}
+
+if obj.check0 then
+	local w,h=obj.screen_w,obj.screen_h
+	local size=math.min(w,h)/4
+	obj.load("figure","四角形",0xffffff,1)
+	obj.drawpoly(
+		-size,	-size,	0,
+		size,	-size,	0,
+		size,	size,	0,
+		-size,	size,	0,
+		-1,-1,1,-1,1,1,1,-1,
+		0.5
+		)
+	obj.load("figure","円",0xffffff,10)
+	local x,y,i
+	for i=1,finess do
+		x,y=
+			size*2/finess*i-size,
+			easing(i/finess,amp,freq,dec,etype)*size*2-size
+		obj.draw(x,-y)
+	end
+	obj.load("figure","円",0xff0000,10)
+	x,y=
+		size*2/totaltime*time-size,
+		easing(time/totaltime,amp,freq,dec,etype)*size*2-size
+		obj.draw(x,-y)
+end

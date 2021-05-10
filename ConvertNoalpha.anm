@@ -1,0 +1,17 @@
+--track0:toR,0,255,0,1
+--track1:toG,0,255,0,1
+--track2:toB,0,255,0,1
+--check0:“K—p,0
+
+if obj.check0 then
+	local w,h=obj.getpixel()
+	local col,a,r,g,b
+	local tr,tg,tb = obj.track0,obj.track1,obj.track2
+	for i=1,w do
+		for j=1,h do
+			col,a = obj.getpixel(i,j)
+			r,g,b = RGB(col)
+			obj.putpixel(i,j, RGB(r*a+tr*(1-a),g*a+tg*(1-a),b*a+tb*(1-a)),1)
+		end
+	end
+end

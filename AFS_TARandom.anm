@@ -1,0 +1,27 @@
+--track0:X,-2000,2000,0
+--track1:Y,-2000,2000,0
+--track2:AF(%),0,100,100
+--track3:AFseed,0,500,0,0.01
+--dialog:{x,y,z},local range={0,0,0};dr,local dr=30;scale{x,y},local scale={0,0};easing,local es=0;add(seed),local aseed=0;
+
+E = require"easing"
+
+local X,Y = obj.track0,obj.track1
+local af = obj.track3/100
+local dx,dy,dz = unpack(range)
+local sx,sy = unpack(scale)
+local seed, saf=math.floor(obj.track4)+aseed, obj.track4%1
+local suf=1-saf
+
+local ox,oy,oz,rz=obj.ox,obj.oy,obj.oz,obj.rz
+local function randomize(d,f,base)
+    return (obj.rand(-d,d,f,seed)*saf+obj.rand(-d,d,f,seed+1)*suf)*af +base
+end
+obj.ox,obj.oy,obj.oz =
+     ox + randomize(dx,0,X),
+     ox + randomize(dy,1,Y),
+     oz + randomize(dz,2,0)
+
+obj.rz = rz + randomize(dr,3,0)
+
+obj.effect("ÉäÉTÉCÉY","X",randomize(sx,4,100),"Y",randomize(sy,5,100))

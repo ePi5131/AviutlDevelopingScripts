@@ -1,0 +1,6 @@
+--track0:N,0,200,0,1
+--dialog:color/col,local col=0xffffff;
+-- require("test_module")
+-- test_module.trackbarwrite(0, col)
+-- --boolean = trackbarwrite(trackの番号0~3,置き換えたい数値 [, 右側の数値を書き換えたい場合はtrue])
+-- obj.load("figure","円",obj.track0)

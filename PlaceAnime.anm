@@ -1,0 +1,27 @@
+local d=50
+
+local oe=require("easing")
+local e=oe.inOutCirc
+local t=obj.frame
+arr = arr or {}
+
+iObject = {}
+iObject.new = function(w,h,i)
+	local f = {}
+	f.width = w
+	f.height = h
+	f.index = i
+
+	f.checkAround = function(self,a)
+		if type(a) == "table" then
+			local t = {}
+			for i=1,3 do
+				for j=1,3 do
+					t.append()
+				end
+			end
+		end
+	end
+	return f
+end
+Animal.name = "unknown"

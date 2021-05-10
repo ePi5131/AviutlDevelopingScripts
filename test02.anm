@@ -1,0 +1,3 @@
+--dialog:専用ダイアログ,val="";
+dia = {"オンオフ", "true", 0, 0, "文字", "\"abc\"", 0, 0}
+boolean, string = rikky_module.parameter(val, 1, dia)

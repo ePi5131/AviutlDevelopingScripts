@@ -1,0 +1,15 @@
+--track0:aaa,0,1,0,1
+--dialog:testcol,col01=0x000000;
+if not rikky_module then require("rikky_module") end
+if rikky_module then
+	-- local dialogs = {
+	-- 	"Specular*color",	0xffffff,	0,		0,
+	-- 	"Ambient*color",	0xffaaaa,	0,		0,
+	-- 	"Emissive*color",	0xffffff,	0,		0,
+	-- 	"Details",			"false",	0,		0,
+	-- 	"└ Finess",			40,			20,		200
+	-- }
+	-- local specol,ambcol,emicol,isDetails,detailfiness = rikky_module.parameter(val, 1, dialogs)
+	-- local specolT,ambcolT,emicolT={RGB(specol)}, {RGB(ambcol)}, {RGB(emicol)}
+	-- rikky_module.colordialog(2)
+end

@@ -1,0 +1,146 @@
+--track0:Number,1,100,1,1
+--track1:Amp,1,10,1,0.01 -- 振幅
+--track2:Freq,0.01,100,3,0.01 -- 頻度
+--track3:Decay,0,100,100,0.01 -- 減衰
+--dialog:easeType[1-4],local etype=1;graphFiness,local finess=5000;graphLine,local line=5; -- ease:最初に反発するまでの動きをlinearからsineに変更(実装が困難であれば無くても問題ありません)
+--check0:Display,1; -- 可視化
+
+
+-- ティム氏のベジエ軌道を踏襲したフォーマットが理想です。cf.youtube.com/watch?v=MlkobRNBees
+local num,amp,freq,dec=
+	obj.track0,
+	obj.track1,
+	obj.track2/25,
+	obj.track3/100
+local totaltime,time,lefttime=obj.totaltime,obj.time,obj.totaltime-obj.time
+local e=require("easing")
+finess = (type(finess)=="number" and math.abs(finess)<=6000) and math.abs(finess) or 5000
+line = (type(line)=="number" and math.abs(line)<=20) and math.abs(line) or 5
+
+--[[
+ElasticEasing
+t:	time(Number / affect 0~1)
+f:	frequency
+d:	decay
+a:	amplitud
+
+(t, b, c, d, a, p)
+returning: 0~1
+]]
+local easing=function(af,a,f,d,etype)
+	if etype<=1 then
+		return e.inElastic(af,0,1,1,a,f)*d+af*(1-d)
+	elseif etype==2 then
+		return e.outElastic(af,0,1,1,a,f)*d+af*(1-d)
+	elseif etype==3 then
+		return e.inOutElastic(af,0,1,1,a,f)*d+af*(1-d)
+	else
+		return e.outInElastic(af,0,1,1,a,f)*d+af*(1-d)
+	end
+end
+
+GG = GG or {}
+GG.elastic = GG.elastic or {}
+-- debug_print(easing(time/totaltime,amp,freq,dec,etype))
+GG.elastic[num] = {e=easing,a=amp,f=freq,d=dec,t=etype}
+
+if obj.check0 then
+	local w,h=obj.screen_w,obj.screen_h
+	local size=math.min(w,h)/4
+	local x,y,i
+
+	-- tempbufferを用意
+	obj.setoption("dst","tmp",obj.screen_w,obj.screen_h)
+
+	-- グラフの背景を追加
+	obj.load("figure","四角形",0x231d1e,1)
+	obj.drawpoly(
+		-size,	-size,	0,
+		size,	-size,	0,
+		size,	size,	0,
+		-size,	size,	0,
+		-1,-1,1,-1,1,1,1,-1,
+		0.3
+		)
+
+		-- 左上に保存番号を表示するテキストを追加
+	obj.setoption("dst","tmp")
+	obj.setoption("blend","1")
+	obj.setfont("Zona Pro Bold",60,0,0xffffff)
+	obj.load(num)
+	obj.draw(0,0,0,1,0.3)
+
+	-- グラフの枠を描画
+	obj.setoption("dst","tmp")
+	obj.setoption("blend",0)
+	obj.load("figure","四角形",0x355c7d,1)
+	obj.drawpoly(-size-1,-size,0,-size+1,-size,0,-size+1,size,0,-size-1,size,0) -- 縦
+	obj.drawpoly(size-1,-size,0,size+1,-size,0,size+1,size,0,size-1,size,0)
+	obj.drawpoly(-size,-size-1,0,size+40,-size-1,0,size+40,-size+1,0,-size,-size+1,0) -- 横
+	obj.drawpoly(-size,size-1,0,size+40,size-1,0,size+40,size+1,0,-size,size+1,0)
+
+	-- グラフの比較対象(Linerのグラフ)を描画
+	obj.setoption("dst","tmp")
+	obj.load("figure","四角形",0x6f8285,1)
+	obj.drawpoly(size-1,-size-1,0,size+1,-size-1,0,-size+1,size+1,0,-size-1,size+1,0)
+
+	-- グラフの曲線を描画
+	obj.load("figure","円",0x919072,line)
+	for i=1,finess do
+		x,y=
+			size*2/finess*i-size,
+			easing(i/finess,amp,freq,dec,etype)*size*2-size
+		obj.setoption("dst","tmp")
+		obj.draw(x,-y)
+	end
+
+	-- 現在の点の座標を取得
+	x,y=
+		size*2/totaltime*time-size,
+		easing(time/totaltime,amp,freq,dec,etype)*size*2-size
+
+	-- 一次グラフの残りaffect%のグラフを追加
+	obj.setoption("dst","tmp")
+	obj.load("figure","四角形",0x6f8285,1)
+	obj.drawpoly(size+15-1,-size,0,size+15+1,-size,0,size+15+1,-y,0,size+15-1,-y,0)
+
+	-- 一次グラフのaffect%のグラフを追加
+	obj.setoption("dst","tmp")
+	obj.load("figure","四角形",0x1bb88b,1)
+	obj.drawpoly(size+15-3,-y,0,size+15+3,-y,0,size+15+3,size,0,size+15-3,size,0)
+
+	-- 点から右の一次グラフへ伸びる線分を追加
+	obj.setoption("dst","tmp")
+	obj.load("figure","四角形",0x6f8285,1)
+	obj.drawpoly(x,-y-1,0,size+30,-y-1,0,size+30,-y+1,0,x,-y+1,0)
+
+	-- 現在の点を追加
+	obj.setoption("dst","tmp")
+	obj.load("figure","円",0xeddabc,15)
+	obj.draw(x,-y)
+
+	-- グラフのそれぞれの端に点を追加
+	obj.load("figure","円",0xf9344c,20,2)
+	obj.draw(-size,size)
+	obj.draw(size,-size)
+	obj.load("figure","円",0xffffff,15)
+	obj.draw(-size,size)
+	obj.draw(size,-size)
+
+	-- グラフの真ん中に座標値を表示するよう追加。
+	x,y=
+		size*2/totaltime*time-size,
+		easing(time/totaltime,amp,freq,dec,etype)*size*2-size
+	obj.setfont("Zona Pro Bold",20,0,0x6f8285)
+	obj.load("("..math.floor((x/size+1)*50)..", "..math.floor((y/size+1)*50)..")")
+	obj.draw(-size+50,-size-20)
+
+	-- 左下にそれぞれのトラックバーの値を表示するテキストを追加
+	obj.setfont("Zona Pro Bold",15,0,0x6f8285)
+	local tx="Amp:"..amp.."; Freq:"..freq.."; Decay:"..dec.."; type:"..etype..";"
+	obj.load(tx)
+	obj.draw(-size+#tx*4+10,size+20)
+
+	-- tempbufferを描画
+	obj.copybuffer("obj","tmp")
+end

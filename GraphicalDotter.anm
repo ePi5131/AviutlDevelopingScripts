@@ -1,10 +1,13 @@
---track0:モザイク%,0,100,25,0.01
+--track0:モザイク%,3,100,25,0.01
 --track1:減色ﾚﾍﾞﾙ,0,8,4,1
+--track2:type,0,3,0,1
 --check0:モザイクを先処理,0
 --dialog:正規値(0-255),local trueRange=255;誤差値(0-255),local falseRange=20;
 require("regret_core")
 
-local yuuki_subtractive=function()
+obj.track2 = obj.track2 or 0
+
+local function yuuki_subtractive()
 	local level=obj.track1
 	local threshold1,threshold2=trueRange,falseRange
 	local userdata,w,h=obj.getpixeldata()
@@ -13,17 +16,42 @@ local yuuki_subtractive=function()
 	userdata,w,h=nil,nil,nil
 end
 
-local gFirm_mosaic=function()
+local function gFirm_mosaic()
 	local d=obj.track0>0 and obj.track0 or 1
 	local bh,dh=d,10000/d
 	obj.effect("リサイズ","拡大率",bh,"補間なし",0)
+	if obj.track2%2==1 then
+		local path = obj.getinfo("script_path")
+		local f = package.loadlib(path .. "rikky_module.dll", "luaopen_rikky_module")
+		if rikky_module or f then
+		 	if f then f().file(1) end
+			if rikky_module and rikky_module.pixelfunction then
+				local f = function(r, g, b, a, r2, g2, b2, a2, x, y)
+					return r,g,b,math.floor(a+0.5)
+				end
+				rikky_module.pixelfunction(f)
+			end
+		else
+			local w,h = obj.getpixel()
+			for i=1,w do
+				for j=1,h do
+					local col,a = obj.getpixel(i,j)
+					obj.putpixel(col,math.floor(a+0.5))
+				end
+			end
+		end
+	end
 	obj.effect("リサイズ","拡大率",dh,"補間なし",1)
 end
 
-if(obj.check0) then
-	gFirm_mosaic()
-	yuuki_subtractive()
-else
-	yuuki_subtractive()
+if obj.track2<2 then
+	if obj.check0 then
+		gFirm_mosaic()
+		yuuki_subtractive()
+	else
+		yuuki_subtractive()
+		gFirm_mosaic()
+	end
+elseif obj.track2>=2 then
 	gFirm_mosaic()
 end

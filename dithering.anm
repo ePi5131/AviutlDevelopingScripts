@@ -1,0 +1,57 @@
+--track0:分割数,2,256,64,1
+--track1:
+--track2:
+--track3:
+local p=64
+-----------------------
+local w,h=obj.getpixel()
+local i,j,oldP,newP,r,g,b,a,col,rgb,qe
+local dither	=	function(h,d) return math.floor(h/d)*d end
+local log		=	function(s) if obj.getinfo("saving")==false then debug_print(s) end end
+
+log("w"..w..";h"..h..";")
+
+local pixels={}
+for i=1,w do
+	pixels[i]={}
+	for j=1,h do
+		r,g,b,a=obj.getpixel(i,j,"rgb")
+		pixels[i][j]={
+			r=r,
+			g=g,
+			b=b,
+			a=a,
+		}
+	end
+end
+
+for x=1,w-1 do
+	for y=1,h-1 do
+		oldP=pixels[x][y]
+		newP={
+			r=dither(oldP.r, p),
+			g=dither(oldP.b, p),
+			b=dither(oldP.g, p),
+			a=oldP.a,
+		}
+
+		qe={
+			r=newP.r-oldP.r,
+			g=newP.g-oldP.g,
+			b=newP.b-oldP.b,
+		}
+		pixel[x]	[y]		=	newP
+		pixel[x+1]	[y]		=	{newP.r+(7/16)*qe.r, newP.g+(7/16)*qe.g, newP.b+(7/16)*qe.b, newP.a}
+		pixel[x-1]	[y+1]	=	{newP.r+(3/16)*qe.r, newP.g+(3/16)*qe.g, newP.b+(3/16)*qe.b, newP.a}
+		pixel[x]	[y+1]	=	{newP.r+(5/16)*qe.r, newP.g+(5/16)*qe.g, newP.b+(5/16)*qe.b, newP.a}
+		pixel[x+1]	[y+1]	=	{newP.r+(1/16)*qe.r, newP.g+(1/16)*qe.g, newP.b+(1/16)*qe.b, newP.a}
+	end
+end
+
+for i=1,w do
+	for j=1,h do
+		rgb=pixels[i][j]
+		col=RGB(rgb.r,rgb.g,rgb.b)
+		obj.putpixel(i,j,col,rgb.a)
+	end
+end
