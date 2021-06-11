@@ -1,0 +1,77 @@
+--track0:type,0,18,0,1
+--track1:è„èëÇ´Ç∑ÇÈ,0,1,0,1
+--check0:å≥ÇÃà íuÇ…ñﬂÇ∑,1
+
+local t = obj.track0
+local w, h = obj.w, obj.h
+local sw, sh = obj.screen_w, obj.screen_h
+
+local cx, cy, ox, oy = 0, 0, 0, 0
+if t == 1 then
+    cx, cy = -w / 2, -h / 2
+    ox, oy = cx, cy
+elseif t == 2 then
+    cx, cy = 0, -h / 2
+    ox, oy = cx, cy
+elseif t == 3 then
+    cx, cy = w / 2, -h / 2
+    ox, oy = cx, cy
+elseif t == 4 then
+    cx, cy = -w / 2, 0
+    ox, oy = cx, cy
+elseif t == 5 then
+    cx, cy = 0, 0
+    ox, oy = cx, cy
+elseif t == 6 then
+    cx, cy = w / 2, 0
+    ox, oy = cx, cy
+elseif t == 7 then
+    cx, cy = -w / 2, h / 2
+    ox, oy = cx, cy
+elseif t == 8 then
+    cx, cy = 0, h / 2
+    ox, oy = cx, cy
+elseif t == 9 then
+    cx, cy = w / 2, h / 2
+    ox, oy = cx, cy
+elseif t == 10 then
+    cx, cy = -sw / 2, -sh / 2
+    ox, oy = cx, cy
+elseif t == 11 then
+    cx, cy = 0, -sh / 2
+    ox, oy = cx, cy
+elseif t == 12 then
+    cx, cy = -sw / 2, -sh / 2
+    ox, oy = cx, cy
+elseif t == 13 then
+    cx, cy = -sw / 2, 0
+    ox, oy = cx, cy
+elseif t == 14 then
+    cx, cy = 0, 0
+    ox, oy = cx, cy
+elseif t == 15 then
+    cx, cy = sw / 2, 0
+    ox, oy = cx, cy
+elseif t == 16 then
+    cx, cy = -sw / 2, sh / 2
+    ox, oy = cx, cy
+elseif t == 17 then
+    cx, cy = 0, sh / 2
+    ox, oy = cx, cy
+elseif t == 18 then
+    cx, cy = sw / 2, sh / 2
+    ox, oy = cx, cy
+end
+if obj.track1 == 0 then
+    obj.cx, obj.cy = obj.cx + cx, obj.cy + cy
+    if obj.check0 then
+        obj.ox, obj.oy = obj.ox + ox, obj.oy + oy
+    end
+else
+    obj.cx, obj.cy = cx, cy
+    if obj.check0 then
+        obj.ox, obj.oy = ox, oy
+    else
+        obj.ox, obj.oy = 0, 0
+    end
+end

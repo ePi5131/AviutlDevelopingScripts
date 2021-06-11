@@ -5,7 +5,6 @@ rikky_module‚ª“ü‚Á‚Ä‚¢‚é‚ÆA$Ì«ÙÀŞ‚Åu$v‚ğ“ü—Í‚µ‚½‚Æ‚«Aƒ_ƒCƒAƒƒO‚ªo‚Ä‚­‚ê‚Ü‚
 LastEdit: 17:11 2018/05/13
 Developed by Aodaruma(@Aodaruma_)
 ]]
-
 --track0:0‚Ã‚¯,0,1,0,1
 --track1:‚¸‚ç‚µ,-200,200,0,1
 --track2:skip,0,50,2,1
@@ -14,33 +13,37 @@ Developed by Aodaruma(@Aodaruma_)
 --dialog:ƒtƒHƒ‹ƒ_ƒpƒX,LT_folderpath="";Šg’£q,local ext="jpg";0‚ğÅ‰‚Æ‚·‚é/chk,local isAddZeroAhead=0;ƒ‰ƒ“ƒ_ƒ€‚ğŒJ‚è•Ô‚·/chk,local isLoopRand=1;seed,local seed=0;
 
 -- require("rikky_module")
-if rikky_module then rikky_module.fold(1) end
+-- if rikky_module then
+rikky_module.fold(1)
+-- end
 
-obj.setfont("ƒƒCƒŠƒI",50,2,0xdddddd,0x555555)
-if(LT_folderpath~="") and (ext~="") then
-	local isAddZeroAhead=obj.track0 and true or false
-	local skipflame,israndom=obj.track2,obj.track3
-	local files=rikky_module.dir(LT_folderpath,ext)
-	local n=#files
+obj.setfont("ƒƒCƒŠƒI", 50, 2, 0xdddddd, 0x555555)
+if (LT_folderpath ~= "") and (ext ~= "") then
+	local isAddZeroAhead = obj.track0 and true or false
+	local skipframe, israndom = obj.track2, obj.track3
+	local files = rikky_module.dir(LT_folderpath, ext)
+	local n = #files
 	seed = seed or 0
 
-	if n==0 then
+	if n == 0 then
 		obj.load("w’è‚³‚ê‚½Šg’£q‚ªƒtƒHƒ‹ƒ_[“à‚É‘¶İ‚µ‚Ü‚¹‚ñB\nƒ_ƒCƒAƒƒO‚ğŠJ‚¢‚Äw’è‚µ‚Ä‚¢‚éŠg’£q‚ğŠm”F‚µ‚Ä‚­‚¾‚³‚¢B")
 	else
-		local f=math.floor(obj.frame/skipflame)+obj.track1
-		local a=obj.check0 and 0 or 1
-		local r=israndom==0 and (f%n+1) or obj.rand(a,n,f%n,math.ceil(f/n)*isLoopRand+seed)
-		local file=files[r]
-		if(obj.check0==false) then
-			obj.load("image",file)
+		local f = skipframe ~= 0 and math.floor(obj.frame / skipframe) + obj.track1 or obj.track1
+		local a = obj.check0 and 0 or 1
+		local r = israndom == 0 and (f % n + 1) or obj.rand(a, n, f % n, math.ceil(f / n) * isLoopRand + seed)
+		local file = files[r]
+		if (obj.check0 == false) then
+			obj.load("image", file)
 		else
-			obj.setfont("ƒƒCƒŠƒI",30)
-			obj.load("w’è‚³‚ê‚½ƒpƒX:\n"..file.."\n<s20>uƒpƒX‚ğ•\¦‚·‚év‚Ìƒ`ƒFƒbƒN‚ğŠO‚·‚Æ‰æ‘œ‚ğ•\¦‚µ‚Ü‚·")
+			obj.setfont("ƒƒCƒŠƒI", 30)
+			obj.load("w’è‚³‚ê‚½ƒpƒX:\n" .. file .. "\n<s20>uƒpƒX‚ğ•\¦‚·‚év‚Ìƒ`ƒFƒbƒN‚ğŠO‚·‚Æ‰æ‘œ‚ğ•\¦‚µ‚Ü‚·")
 		end
-		if(obj.getinfo("saving")==false) then debug_print("load file path: "..file..";") end
+		if (obj.getinfo("saving") == false) then
+			debug_print("load file path: " .. file .. ";")
+		end
 	end
-elseif(LT_folderpath=="") then
+elseif (LT_folderpath == "") then
 	obj.load("ƒpƒX‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB\nƒ_ƒCƒAƒƒO‚ğŠJ‚¢‚Äİ’è‚µ‚Ä‚­‚¾‚³‚¢B\n<s15>rikky_module‚ğ‚Á‚Ä‚¢‚éê‡‚ÍAu$Ì«ÙÀŞ1v‚É\nu$v‚Æ“ü—Í‚µ‚Ä‚İ‚Ä‚­‚¾‚³‚¢B")
-elseif(ext=="") then
+elseif (ext == "") then
 	obj.load("Šg’£q‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB\nƒ_ƒCƒAƒƒO‚ğŠJ‚¢‚Äİ’è‚µ‚Ä‚­‚¾‚³‚¢B")
 end

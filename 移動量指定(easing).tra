@@ -1,0 +1,23 @@
+--twopoint
+--param:1
+
+local e = require("easing_aviutl")
+
+local gpt = obj.getpoint
+
+local i, rate = require "auls_tra".getindex()
+local left, right = gpt(0), gpt(1)
+
+-- return (right - left) * rate + left
+if gpt "param" >= 0 then
+	return e.easing(
+		gpt "param",
+		((gpt "time" % (left / 1000)) / (left / 1000)),
+		right * math.floor(gpt "time" / (left / 1000)),
+		right,
+		1
+	)
+else
+	return Bezier_flow.time(math.abs(gpt "param"), ((gpt "time" % (left / 1000)) / (left / 1000))) * right +
+		right * math.floor(gpt "time" / (left / 1000))
+end

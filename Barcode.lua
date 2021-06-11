@@ -19,6 +19,23 @@ https://www.keyence.co.jp/ss/products/autoid/codereader/basic_mechanism.jsp
 
 - Aodaruma (@Aodaruma_)
 ]] --
+
+-- 便利関数群
+local function tabledump(o)
+    if type(o) == "table" then
+        local s = "{ "
+        for k, v in pairs(o) do
+            if type(k) ~= "number" then
+                k = '"' .. k .. '"'
+            end
+            s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+        end
+        return s .. "} "
+    else
+        return tostring(o)
+    end
+end
+
 --[[
 EANコード/JANコード
 参照:
@@ -208,9 +225,120 @@ end
 local function UPC()
 end
 
-local function Customer()
+--[[
+RM4SCC (Royal Mail 4-State Customer Code)
+参照:
+- https://en.wikipedia.org/wiki/RM4SCC
+
+第2引数がnilまたはfalseの場合:
+    input: 0-9,a-zの英数字 ([0-9a-z]*n)
+    output: 4*n+2のデータ ([1-4]*(4*n+2))
+第2引数がtrueの場合:
+    input: 0-9,a-zの8文字の英数字 ([0-9a-z]*8)
+    output: 4*9+2のデータ ([1-4]*(4*9+2))
+
+inputにて、文字列ではない値が入力された場合、または、英数字以外の文字・英数字の大文字が入力された場合、errorを返します。
+また、第二引数でtrueが指定されてる場合、文字列が8文字でない場合、errorを返します。
+
+- developed by Aodaruma(@Aodaruma_)
+]]
+local function RM4SCC(data, isRuled)
+    isRuled = isRuled or false
+    -- =================================
+    -- データ入力
+    -- =================================
+
+    -- シンボル群
+    local symbols = {
+        ["0"] = "0033",
+        ["1"] = "0213",
+        ["2"] = "0231",
+        ["3"] = "2013",
+        ["4"] = "2031",
+        ["5"] = "2211",
+        ["6"] = "0123",
+        ["7"] = "0303",
+        ["8"] = "0321",
+        ["9"] = "2103",
+        a = "2121",
+        b = "2301",
+        c = "0132",
+        d = "0312",
+        e = "0330",
+        f = "2112",
+        g = "2130",
+        h = "2310",
+        i = "1023",
+        j = "1203",
+        k = "1221",
+        l = "3003",
+        m = "3021",
+        n = "3201",
+        o = "1032",
+        p = "1212",
+        q = "1230",
+        r = "3012",
+        s = "3030",
+        t = "3210",
+        u = "1122",
+        v = "1302",
+        w = "1320",
+        x = "3102",
+        y = "3120",
+        z = "3300",
+        start = "1",
+        stop = "3"
+    }
+
+    -- ================================= --
+    -- データチェック
+    -- ================================= --
+    if type(isRuled) ~= "boolean" and type(isRuled) ~= nil then
+        return {
+            success = false,
+            message = "第2引数にはtrue/false/nilを入力してください。"
+        }
+    end
+
+    if type(data) ~= "string" then
+        return {
+            success = false,
+            message = "不正なデータ型です。stringで入力してください。"
+        }
+    end
+
+    if not data:find("^[0-9a-z]+$") then
+        return {
+            success = false,
+            message = "0-9の数字またはa-zの英字小文字のみで構成された文字列を入力してください。"
+        }
+    end
+
+    if isRuled == true and #data ~= 8 then
+        return {
+            success = false,
+            message = "12桁、または7桁の数字の文字列を入力してください。"
+        }
+    end
+
+    local bars = ""
+    if isRuled == true then
+    else
+        bars = bars .. symbols.start
+        for c in data:gmatch "." do
+            bars = bars .. symbols[c]
+        end
+        bars = bars .. symbols.stop
+    end
+
+    return {
+        success = true,
+        bars = bars,
+        datalen = #data
+    }
 end
 
 return {
-    JAN = JAN
+    JAN = JAN,
+    RM4SCC = RM4SCC
 }
